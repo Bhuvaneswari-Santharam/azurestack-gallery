@@ -210,28 +210,30 @@ log_level -i "Azure CLI version : $(az --version)"
 #####################################################################################
 #Section to install Go.
 
-wget https://dl.google.com/go/go1.11.4.linux-amd64.tar.gz
+
 ROOT_PATH=/home/azureuser
-mkdir $ROOT_PATH
+#sudo mkdir $ROOT_PATH
 sudo mkdir $ROOT_PATH/bin
+cd $ROOT_PATH
+sudo wget https://dl.google.com/go/go1.11.4.linux-amd64.tar.gz
 sudo tar -C  $ROOT_PATH/bin -xzf go1.11.4.linux-amd64.tar.gz
 
 
 # Set the environment variables
 export GOPATH=/home/azureuser/src/github.com
 export GOROOT=/home/azureuser/bin/go
-export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+export PATH=$GOPATH:$GOROOT:$PATH
 
 #####################################################################################
-#Section to install/get AKS-Engine binary.
-log_level -i "Getting AKS-Engine binary."
+#Section to install/get AKS-Engine respository.
+log_level -i "Getting AKS-Engine respository"
 
 # Todo update release branch details: msazurestackworkloads, azsmaster
-retrycmd_if_failure 5 10 git clone https://github.com/msazurestackworkloads/aks-engine/tree/next 
-cd /
+retrycmd_if_failure 5 10 git clone https://github.com/msazurestackworkloads/aks-engine -b next
+
 cd aks-engine
-mkdir $ROOT_PATH/src/github.com/Azure
-sudo mv aks-engine $ROOT_PATH/src/github.com/Azure
+sudo mkdir -p $ROOT_PATH/src/github.com/Azure
+sudo mv $ROOT_PATH/aks-engine $ROOT_PATH/src/github.com/Azure
 
 #####################################################################################
 # Update certificates to right location as they are required 
@@ -251,29 +253,37 @@ retrycmd_if_failure 20 30 ensureCertificates
 
 #####################################################################################
 #Section to install kubectl
+KUBECTL_VERSION=1.10.0
 
-cd $ROOT_PATH
-snap install kubectl --classic
+echo "==> Downloading kubectl version ${KUBECTL_VERSION} <=="
 
-export PATH=$PATH:/usr/bin/snap
+sudo curl -L https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl
+
+sudo chmod +x /usr/local/bin/kubectl
+
+export PATH=/usr/local/bin/kubectl:$PATH
+
 
 #####################################################################################
 # Section to create API model file for AKS-Engine.
 
 # First check if API model file exist else exit.
-log_level -i "Overriding default file with correct values in API model or cluster definition."
-if [ -f "examples/azurestack/azurestack-kubernetes$K8S_AZURE_CLOUDPROVIDER_VERSION.json" ] ; then
-    log_level -i "Found file: azurestack-kubernetes$K8S_AZURE_CLOUDPROVIDER_VERSION.json."
-else
-    log_level -i "File azurestack-kubernetes$K8S_AZURE_CLOUDPROVIDER_VERSION.json does not exist. Exiting..."
-    exit 1
-fi
+
+AZURESTACK_CONFIGURATION_TEMP="${AZURESTACK_CONFIGURATION_TEMP:-azurestack_temp.json}"
+
+AZURESTACK_CONFIGURATION="${AZURESTACK_CONFIGURATION:-azurestack.json}"
+
+log_level -i "Copying default API model file to $PWD."
+
+
+wget https://raw.githubusercontent.com/Bhuvaneswari-Santharam/azurestack-gallery/bhsantha-aks-e2e/AKSEngine-E2E/Template/azurestack_template.json
+
+sudo cp azurestack_template.json $AZURESTACK_CONFIGURATION
+
+
 
 # Check if API model file has some data or not else exit.
-AZURESTACK_CONFIGURATION_TEMP="${AZURESTACK_CONFIGURATION_TEMP:-azurestack_temp.json}"
-AZURESTACK_CONFIGURATION="${AZURESTACK_CONFIGURATION:-azurestack.json}"
-log_level -i "Copying default API model file to $PWD."
-sudo cp examples/azurestack/azurestack-kubernetes$K8S_AZURE_CLOUDPROVIDER_VERSION.json $AZURESTACK_CONFIGURATION
+
 if [ -s "$AZURESTACK_CONFIGURATION" ] ; then
     log_level -i "Found $AZURESTACK_CONFIGURATION in $PWD and is greater than zero bytes"
 else
@@ -306,19 +316,6 @@ else
     log_level -i "Active directory endpoint is: $ENDPOINT_ACTIVE_DIRECTORY_ENDPOINT"
 fi
 
-# Start updating file with passed values.
-STORAGE_PROFILE="${STORAGE_PROFILE:-blobdisk}"
-# use blobdisk and AvailabilitySet
-if [ "$STORAGE_PROFILE" == "blobdisk" ] ; then
-
-    log_level -i "Updating the API model file to include blob disk values."
-    sudo cat $AZURESTACK_CONFIGURATION | jq --arg AvailabilitySet "AvailabilitySet" '.properties.agentPoolProfiles[0].availabilityProfile=$AvailabilitySet' | \
-    jq --arg StorageAccount "StorageAccount" '.properties.agentPoolProfiles[0].storageProfile=$StorageAccount' | \
-    jq --arg StorageAccount "StorageAccount" '.properties.masterProfile.storageProfile=$StorageAccount' > $AZURESTACK_CONFIGURATION_TEMP
-
-    log_level -i "Checking and moving 'use blobdisk and AvailabilitySet' info from temp file to main api model file."
-    check_and_move_azurestack_configuration $AZURESTACK_CONFIGURATION_TEMP $AZURESTACK_CONFIGURATION
-fi
 
 sudo cat $AZURESTACK_CONFIGURATION | jq --arg ENDPOINT_ACTIVE_DIRECTORY_RESOURCEID $ENDPOINT_ACTIVE_DIRECTORY_RESOURCEID '.properties.customCloudProfile.environment.serviceManagementEndpoint = $ENDPOINT_ACTIVE_DIRECTORY_RESOURCEID'|\
 jq --arg ENDPOINT_ACTIVE_DIRECTORY_ENDPOINT $ENDPOINT_ACTIVE_DIRECTORY_ENDPOINT '.properties.customCloudProfile.environment.activeDirectoryEndpoint = $ENDPOINT_ACTIVE_DIRECTORY_ENDPOINT' | \
@@ -377,8 +374,27 @@ retrycmd_if_failure 5 10 az cloud update --profile $HYBRID_PROFILE
 
 export CLIENT_ID=$SPN_CLIENT_ID
 export CLIENT_SECRET=$SPN_CLIENT_SECRET
-export TENANT_ID= $TENANT_ID
+#export TENANT_ID= $TENANT_ID
 export SUBSCRIPTION_ID=$TENANT_SUBSCRIPTION_ID
 export CLEANUP_ON_EXIT=false
 export CLUSTER_DEFINITION=$AZURE_CONFIGURATION
+export LOCATION =$REGION_NAME
+
+sudo cd $ROOT_PATH/src/github.com/Azure/aks-engine
+
+sudo make bootstrap
+
+sudo make validate-copyright-headers test-style
+
+sudo make validate-dependencies
+
+sudo make build-binary
+
+if [ -e aks-engine ]; then
+    log-level -i "Found aks-engine binary"
+else
+    log-level "Aks-engine binary not found. Can't run E2E Test"
+    exit 1
+fi
+
 
