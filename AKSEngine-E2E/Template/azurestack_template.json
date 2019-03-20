@@ -9,7 +9,6 @@
                 "kubernetesImageBase": "k8s.gcr.io/",
                 "customHyperkubeImage": "msazurestackqa/hyperkube-amd64:v1.11.7",
                 "useInstanceMetadata": false,
-                "networkPolicy": "none",
                 "networkPlugin": "flannel"
             }
         },
