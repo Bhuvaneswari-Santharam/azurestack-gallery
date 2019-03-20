@@ -218,11 +218,12 @@ cd $ROOT_PATH
 sudo wget https://dl.google.com/go/go1.11.4.linux-amd64.tar.gz
 sudo tar -C  $ROOT_PATH/bin -xzf go1.11.4.linux-amd64.tar.gz
 
+sudo apt install gcc make -y
 
 # Set the environment variables
-export GOPATH=/home/azureuser/src/github.com
+export GOPATH=/home/azureuser
 export GOROOT=/home/azureuser/bin/go
-export PATH=$GOPATH:$GOROOT:$PATH
+export PATH=$GOPATH:$GOROOT/bin:$PATH
 
 #####################################################################################
 #Section to install/get AKS-Engine respository.
@@ -234,6 +235,11 @@ retrycmd_if_failure 5 10 git clone https://github.com/msazurestackworkloads/aks-
 cd aks-engine
 sudo mkdir -p $ROOT_PATH/src/github.com/Azure
 sudo mv $ROOT_PATH/aks-engine $ROOT_PATH/src/github.com/Azure
+
+#####################################################################################
+#Section to install make
+
+sudo apt-get install make
 
 #####################################################################################
 # Update certificates to right location as they are required 
@@ -263,6 +269,13 @@ sudo chmod +x /usr/local/bin/kubectl
 
 export PATH=/usr/local/bin/kubectl:$PATH
 
+
+#####################################################################################
+# Section to install golang-dep
+
+sudo curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+
+export PATH=$GOPATH/bin:$PATH
 
 #####################################################################################
 # Section to create API model file for AKS-Engine.
@@ -374,27 +387,31 @@ retrycmd_if_failure 5 10 az cloud update --profile $HYBRID_PROFILE
 
 export CLIENT_ID=$SPN_CLIENT_ID
 export CLIENT_SECRET=$SPN_CLIENT_SECRET
-#export TENANT_ID= $TENANT_ID
+export TENANT_ID=$TENANT_ID
 export SUBSCRIPTION_ID=$TENANT_SUBSCRIPTION_ID
 export CLEANUP_ON_EXIT=false
 export CLUSTER_DEFINITION=$AZURE_CONFIGURATION
-export LOCATION =$REGION_NAME
+export LOCATION=$REGION_NAME
 
-sudo cd $ROOT_PATH/src/github.com/Azure/aks-engine
+cd $ROOT_PATH/src/github.com/Azure/aks-engine
 
-sudo make bootstrap
+make bootstrap
 
-sudo make validate-copyright-headers test-style
+make validate-dependencies
 
-sudo make validate-dependencies
+make build-cross
 
-sudo make build-binary
-
-if [ -e aks-engine ]; then
+if [ -f "./bin/aks-engine" ]; then
     log-level -i "Found aks-engine binary"
 else
-    log-level "Aks-engine binary not found. Can't run E2E Test"
+    log-level -e "Aks-engine binary not found. Can't run E2E Test"
     exit 1
 fi
+
+
+#sudo touch aks-engine-E2E.txt
+
+make test-kubernetes
+
 
 
