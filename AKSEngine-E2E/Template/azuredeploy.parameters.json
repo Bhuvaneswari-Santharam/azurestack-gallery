@@ -46,6 +46,21 @@
     },
     "identitySystem": {
       "value": ""
+    },
+    "aksEngineNewNodeCount": {
+      "value": 5
+    },
+    "aksEngineK8sUpgradeVersion": {
+      "value": ""
+    },
+    "aksEngineApiModel": {
+      "value": "https://raw.githubusercontent.com/honcao/aks-engine/e2e/examples/kubernetes-azure-stack.json"
+    },
+    "aksEngineRepository": {
+      "value": ""
+    },
+    "aksEngineBranch": {
+      "value": ""
     }
   }
 }
