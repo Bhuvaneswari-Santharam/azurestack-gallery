@@ -116,7 +116,7 @@
     },
 
     "aksEngineApiModel": {
-      "defaultValue":"https://raw.githubusercontent.com/honcao/aks-engine/e2e/examples/kubernetes-azure-stack.json"
+      "defaultValue":"https://raw.githubusercontent.com/honcao/aks-engine/e2e/examples/kubernetes-azure-stack.json",
       "metadata": {
         "description": "The API Model to be used for kubernetes deployment using aks engine "
       },
