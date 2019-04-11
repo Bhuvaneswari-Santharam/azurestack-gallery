@@ -93,6 +93,40 @@
       },
       "type": "string"
     },
+    "aksEngineNodeCount": {
+      "defaultValue": 5,
+      "metadata": {
+        "description": "The aks engine scale node count"
+      },
+      "type": "int"
+    },
+    "aksEngineUpgradeVersion": {
+      "metadata": {
+        "description": "The kubernetes upgrade version using aks engine"
+      },
+      "type": "string"
+    },
+    "aksEngineApiModel": {
+      "defaultValue":"https://raw.githubusercontent.com/honcao/aks-engine/e2e/examples/kubernetes-azure-stack.json",
+      "metadata": {
+        "description": "The API Model to be used for kubernetes deployment using aks engine "
+      },
+      "type": "string"
+    },
+
+    "aksEngineRepository": {
+      "metadata": {
+        "description": "The Aks Engine Repository to be used for building aks engine binary"
+      },
+      "type": "string"
+    },
+
+    "aksEngineBranch": {
+      "metadata": {
+        "description": "The Aks Engine branch to be used for building the aks engine binary"
+      },
+      "type": "string"
+    },
     "kubernetesAzureCloudProviderVersion": {
       "type": "string",
       "defaultValue": "1.11",
