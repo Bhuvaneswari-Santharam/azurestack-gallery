@@ -47,10 +47,10 @@
     "identitySystem": {
       "value": ""
     },
-    "aksEngineNewNodeCount": {
+    "aksEngineNodeCount": {
       "value": 5
     },
-    "aksEngineK8sUpgradeVersion": {
+    "aksEngineUpgradeVersion": {
       "value": ""
     },
     "aksEngineApiModel": {
