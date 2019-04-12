@@ -115,9 +115,7 @@ CLIENT_ID=$(cat $ROOT_PATH/_output/$APIMODEL_FILE | jq '.properties.servicePrinc
 FQDN_ENDPOINT_SUFFIX=$(cat $ROOT_PATH/_output/$APIMODEL_FILE | jq '.properties.customCloudProfile.environment.resourceManagerVMDNSSuffix' | tr -d '"')
 IDENTITY_SYSTEM=$(cat $ROOT_PATH/_output/$APIMODEL_FILE | jq '.properties.customCloudProfile.identitySystem' | tr -d '"')
 AUTH_METHOD=$(cat $ROOT_PATH/_output/$APIMODEL_FILE | jq '.properties.customCloudProfile.authenticationMethod' | tr -d '"')
-AZURE_ENV_OLD=$(cat $ROOT_PATH/_output/$APIMODEL_FILE | jq '.properties.customCloudProfile.environment.name' | tr -d '"')
-
-
+AZURE_ENV=$(cat $ROOT_PATH/_output/$APIMODEL_FILE | jq '.properties.customCloudProfile.environment.name' | tr -d '"')
 
 echo "CLIENT_ID: $CLIENT_ID"
 
@@ -186,12 +184,21 @@ else
         --auth-method $AUTH_METHOD \
         --client-id $CLIENT_ID \
         --identity-system $IDENTITY_SYSTEM || exit 1
+
 fi
+
+log_level -i "Scaling of kubernetes cluster completed.Running E2E test..."
 
 cd $ROOT_PATH
 export CLUSTER_DEFINITION=$AKSENGINE_APIMODEL
 export CLEANUP_ON_EXIT=false
-export NAME
+export NAME=$RESOURCE_GROUP
+export CLIENT_ID=$CLIENT_ID
+export TENANT_ID=$TENANT_ID
+export SUBSCRIPTION_ID=$SUBSCRIPTION_ID
+export TIMEOUT=20m
+export REGION=$REGION
+
 set +e
 make test-kubernetes > scale_test_results
 set -e
