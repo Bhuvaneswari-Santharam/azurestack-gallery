@@ -143,7 +143,7 @@ export NAME=$RESOURCE_GROUP
 export REGION=$REGION
 export TENANT_ID=$TENANT_ID
 export SUBSCRIPTION_ID=$TENANT_SUBSCRIPTION_ID
-export OUTPUT=$ROOT_PATH/_output/$RESOURCE_GROUP
+export OUTPUT=$ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json
 export AGENT_POOL="agentpool1"
 
 echo "CLIENT_ID: $CLIENT_ID"
@@ -162,6 +162,19 @@ if [ $IDENTITY_SYSTEM == "adfs" ] ; then
     KEY_LOCATION=$ROOT_PATH/spnauth.key
     CERT_LOCATION=$ROOT_PATH/spnauth.crt
 
+    if [ ! -f $KEY_LOCATION ] ; then
+        log_level -i "Private Key not found.Scale can not be performed"
+    fi
+
+    if [ ! -f $CERT_LOCATION ] ; then
+        log_level -i "Certificate not found.Scale can not be performed"
+    fi
+
+    VAULT_ID=$(cat $ROOT_PATH/_output/$APIMODEL_FILE | jq '.properties.servicePrincipalProfile.keyvaultSecretRef.vaultID' | tr -d '"')
+    SECRET_NAME=$(cat $ROOT_PATH/_output/$APIMODEL_FILE | jq '.properties.servicePrincipalProfile.keyvaultSecretRef.secretName' | tr -d '"')
+    export VAULT_ID=$VAULT_ID
+    export SECRET_NAME=$SECRET_NAME
+    
     ./bin/aks-engine scale \
         --azure-env $AZURE_ENV \
         --subscription-id $SUBSCRIPTION_ID \
@@ -203,14 +216,15 @@ fi
 log_level -i "Scaling of kubernetes cluster completed.Running E2E test..."
 
 cd $ROOT_PATH
-export CLUSTER_DEFINITION=$AKSENGINE_APIMODEL
+export CLUSTER_DEFINITION=$ROOT_PATH/_output/$APIMODEL_FILE
 export CLEANUP_ON_EXIT=false
 export NAME=$RESOURCE_GROUP
 export CLIENT_ID=$CLIENT_ID
 export TENANT_ID=$TENANT_ID
 export SUBSCRIPTION_ID=$SUBSCRIPTION_ID
 export TIMEOUT=20m
-export REGION=$REGION
+export LOCATION=$REGION
+export API_PROFILE="2018-03-01-hybrid"
 
 # Set the environment variables
 export GOPATH=/home/azureuser
