@@ -66,19 +66,6 @@ then
 
 fi
 
-if [ -z "$UPGRADE_VERSION" ]
-
-then
-
-    echo ""
-
-    echo "[ERR] --upgrade-verison is required"
-
-    printUsage
-
-fi
-
-
 if [ -z "$TENANT_SUBSCRIPTION_ID" ]
 
 then
@@ -86,6 +73,18 @@ then
     echo ""
 
     echo "[ERR] --subscription-id is required"
+
+    printUsage
+
+fi
+
+if [ -z "$UPGRADE_VERSION" ]
+
+then
+
+    echo ""
+
+    echo "[ERR] --upgrade-verison is required"
 
     printUsage
 
@@ -140,8 +139,7 @@ export NAME=$RESOURCE_GROUP
 export REGION=$REGION
 export TENANT_ID=$TENANT_ID
 export SUBSCRIPTION_ID=$TENANT_SUBSCRIPTION_ID
-export OUTPUT=$ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json
-export AGENT_POOL="agentpool1"
+export OUTPUT=$ROOT_PATH/_output/$RESOURCE_GROUP
 
 echo "CLIENT_ID: $CLIENT_ID"
 echo "NAME:$RESOURCE_GROUP"
@@ -164,7 +162,6 @@ if [ $IDENTITY_SYSTEM == "adfs" ] ; then
         --deployment-dir $OUTPUT \
         --location $REGION \
         --resource-group $RESOURCE_GROUP  \
-        --node-pool $AGENT_POOL \
         --auth-method $AUTH_METHOD \
         --client-id $CLIENT_ID \
         --private-key-path $KEY_LOCATION \
@@ -185,7 +182,6 @@ else
         --deployment-dir $OUTPUT \
         --location $REGION \
         --resource-group $RESOURCE_GROUP  \
-        --node-pool $AGENT_POOL \
         --auth-method $AUTH_METHOD \
         --client-id $CLIENT_ID \
         --upgrade-version $UPGRADE_VERSION \
