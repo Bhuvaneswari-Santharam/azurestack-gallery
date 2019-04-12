@@ -82,6 +82,19 @@ then
 fi
 
 
+if [ -z "$NODE_COUNT" ]
+
+then
+
+    echo ""
+
+    echo "[ERR] --node-count is required"
+
+    printUsage
+
+fi
+
+
 
 # Basic details of the system
 log_level -i "Running  script as : $(whoami)"
@@ -198,6 +211,11 @@ export TENANT_ID=$TENANT_ID
 export SUBSCRIPTION_ID=$SUBSCRIPTION_ID
 export TIMEOUT=20m
 export REGION=$REGION
+
+# Set the environment variables
+export GOPATH=/home/azureuser
+export GOROOT=/home/azureuser/bin/go
+export PATH=$GOPATH:$GOROOT/bin:$PATH
 
 set +e
 make test-kubernetes > scale_test_results
