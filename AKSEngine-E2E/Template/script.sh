@@ -431,11 +431,7 @@ set +e
 make test-kubernetes > deploy_test_results 
 set -e
 
-if [ $RESULT -lt 3 ] ; then
-    exit 0
-else
-    exit $RESULT
-fi
+
 
 
 
