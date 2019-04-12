@@ -66,6 +66,17 @@ then
 
 fi
 
+if [ -z "$UPGRADE_VERSION" ]
+
+then
+
+    echo ""
+
+    echo "[ERR] --upgrade-verison is required"
+
+    printUsage
+
+fi
 
 
 if [ -z "$TENANT_SUBSCRIPTION_ID" ]
@@ -153,13 +164,13 @@ if [ $IDENTITY_SYSTEM == "adfs" ] ; then
         --deployment-dir $OUTPUT \
         --location $REGION \
         --resource-group $RESOURCE_GROUP  \
-        --master-FQDN $FQDN_ENDPOINT_SUFFIX \
         --node-pool $AGENT_POOL \
         --auth-method $AUTH_METHOD \
         --client-id $CLIENT_ID \
         --private-key-path $KEY_LOCATION \
         --certificate-path $CERT_LOCATION \
-        --upgrade-version $UPGRADE_VERISON   || exit 1
+        --upgrade-version $UPGRADE_VERISON \
+        --force || exit 1
 else
     CLIENT_SECRET=$(cat $ROOT_PATH/_output/$APIMODEL_FILE | jq '.properties.servicePrincipalProfile.secret' | tr -d '"')
     export CLIENT_SECRET=$CLIENT_SECRET
@@ -174,11 +185,12 @@ else
         --deployment-dir $OUTPUT \
         --location $REGION \
         --resource-group $RESOURCE_GROUP  \
-        --master-FQDN $FQDN_ENDPOINT_SUFFIX \
         --node-pool $AGENT_POOL \
         --auth-method $AUTH_METHOD \
         --client-id $CLIENT_ID \
-        --upgrade-version $UPGRADE_VERSION || exit 1
+        --upgrade-version $UPGRADE_VERSION \
+        --client-secret $CLIENT_SECRET
+        --force || exit 1
 fi
 
 log_level -i "Upgrading kubernetes cluster to version $UPGRADE_VERSION completed.Running E2E test..."
@@ -200,7 +212,7 @@ set -e
 RESULT=$?
 log_level -i "Result: $RESULT"
 
-#Script returns exit=0 for the failure in the E2E test else throws the error code
+#Script returns exit=0 for the failure in the E2E test else throws the deployment error code
 if [ $RESULT -lt 3 ] ; then
     exit 0
 else
