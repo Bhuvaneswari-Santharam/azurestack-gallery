@@ -107,6 +107,7 @@ cd $ROOT_PATH
 
 log_level -i "Getting Resource group and region"
 
+export APIMODEL_FILE=`ls -dt1 _output/* | head -n 1 | cut -d/ -f2 | cut -d. -f1`
 export RESOURCE_GROUP=`ls -dt1 _output/* | head -n 1 | cut -d/ -f2`
 export REGION=`ls -dt1 _output/* | head -n 1 | cut -d/ -f2 | cut -d- -f2`
 
@@ -120,7 +121,6 @@ if [ $REGION == "" ] ; then
     exit 1
 fi
 
-APIMODEL_FILE=$RESOURCE_GROUP.json
 
 cd $ROOT_PATH/_output
 
@@ -143,7 +143,7 @@ export NAME=$RESOURCE_GROUP
 export REGION=$REGION
 export TENANT_ID=$TENANT_ID
 export SUBSCRIPTION_ID=$TENANT_SUBSCRIPTION_ID
-export OUTPUT=$ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json
+export OUTPUT=$ROOT_PATH/_output/$RESOURCE_GROUP
 export AGENT_POOL="agentpool1"
 
 echo "CLIENT_ID: $CLIENT_ID"
