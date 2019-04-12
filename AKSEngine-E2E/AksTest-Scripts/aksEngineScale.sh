@@ -107,8 +107,8 @@ cd $ROOT_PATH
 
 log_level -i "Getting Resource group and region"
 
-export APIMODEL_FILE=`ls -dt1 _output/* | head -n 1 | cut -d/ -f2 | cut -d. -f1`
-export RESOURCE_GROUP=`ls -dt1 _output/* | head -n 1 | cut -d/ -f2`
+export RESOURCE_GROUP=`ls -dt1 _output/* | head -n 1 | cut -d/ -f2 | cut -d. -f1`
+export APIMODEL_FILE=`ls -dt1 _output/* | head -n 1 | cut -d/ -f2`
 export REGION=`ls -dt1 _output/* | head -n 1 | cut -d/ -f2 | cut -d- -f2`
 
 if [ $RESOURCE_GROUP == "" ] ; then
