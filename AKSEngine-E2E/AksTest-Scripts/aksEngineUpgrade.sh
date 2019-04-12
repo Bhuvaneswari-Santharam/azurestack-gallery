@@ -15,21 +15,6 @@ log_level()
     esac
 }
 
-convert_to_cert() {
-
-    log_level -i "Decoding secret to json."
-    echo $1 | base64 --decode > cert.json
-       
-    log_level -i "Saving data value to $2."       
-    cat cert.json | jq '.data' | tr -d \" | base64 --decode > $2
-       
-    log_level -i "Extracting the password."
-    PASSWORD=$(cat cert.json | jq '.password' | tr -d \")
-
-    echo "Converting data into key"
-    openssl pkcs12 -in $2 -nocerts -nodes  -out $3 -passin pass:$PASSWORD
-}
-
 while [[ "$#" -gt 0 ]]
 
 do
