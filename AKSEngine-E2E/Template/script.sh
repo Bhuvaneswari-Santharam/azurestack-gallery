@@ -95,6 +95,12 @@ convert_to_cert() {
 
     log_level -i "Converting data into pem format."
     openssl pkcs12 -in $2 -nodes -passin pass:$PASSWORD -out $3
+
+    log_level -i "Converting to certificate"
+    openssl pkcs12 -in $2 -clcerts -nokeys -out $4 -passin pass:$PASSWORD
+
+    log_level -i "Converting into key"
+    openssl pkcs12 -in $2 -nocerts -nodes  -out $5 -passin pass:$PASSWORD
 }
 
 ### 
@@ -158,6 +164,11 @@ log_level -i "SSH_PUBLICKEY: $SSH_PUBLICKEY"
 log_level -i "STORAGE_PROFILE: $STORAGE_PROFILE"
 log_level -i "TENANT_ID: $TENANT_ID"
 log_level -i "TENANT_SUBSCRIPTION_ID: $TENANT_SUBSCRIPTION_ID"
+log_level -i "AKSENGINE_NODE_COUNT: $AKSENGINE_NODE_COUNT"
+log_level -i "AKSENGINE_UPGRADE_VERSION: $AKSENGINE_UPGRADE_VERSION"
+log_level -i "AKSENGINE_API_MODEL: $AKSENGINE_API_MODEL"
+log_level -i "AKSENGINE_REPO: $AKSENGINE_REPO"
+log_level -i "AKSENGINE_BRANCH: $AKSENGINE_BRANCH"
 log_level -i "------------------------------------------------------------------------"
 
 #####################################################################################
@@ -230,7 +241,7 @@ export PATH=$GOPATH:$GOROOT/bin:$PATH
 log_level -i "Getting AKS-Engine respository"
 
 # Todo update release branch details: msazurestackworkloads, azsmaster
-retrycmd_if_failure 5 10 git clone https://github.com/msazurestackworkloads/aks-engine -b next
+retrycmd_if_failure 5 10 git clone https://github.com/$AKSENGINE_REPO -b $AKSENGINE_BRANCH
 
 cd aks-engine
 sudo mkdir -p $ROOT_PATH/src/github.com/Azure
@@ -259,7 +270,7 @@ retrycmd_if_failure 20 30 ensureCertificates
 
 #####################################################################################
 #Section to install kubectl
-KUBECTL_VERSION=1.10.0
+KUBECTL_VERSION=1.11.7
 
 echo "==> Downloading kubectl version ${KUBECTL_VERSION} <=="
 
@@ -267,7 +278,9 @@ sudo curl -L https://storage.googleapis.com/kubernetes-release/release/v${KUBECT
 
 sudo chmod +x /usr/local/bin/kubectl
 
-export PATH=/usr/local/bin/kubectl:$PATH
+sudo cp /usr/local/bin/kubectl /usr/local/bin/k
+
+export PATH=/usr/local/bin:$PATH
 
 
 #####################################################################################
@@ -281,28 +294,6 @@ export PATH=$GOPATH/bin:$PATH
 # Section to create API model file for AKS-Engine.
 
 # First check if API model file exist else exit.
-
-AZURESTACK_CONFIGURATION_TEMP="${AZURESTACK_CONFIGURATION_TEMP:-azurestack_temp.json}"
-
-AZURESTACK_CONFIGURATION="${AZURESTACK_CONFIGURATION:-azurestack.json}"
-
-log_level -i "Copying default API model file to $PWD."
-
-
-wget https://raw.githubusercontent.com/Bhuvaneswari-Santharam/azurestack-gallery/bhsantha-aks-e2e/AKSEngine-E2E/Template/azurestack_template.json
-
-sudo cp azurestack_template.json $AZURESTACK_CONFIGURATION
-
-
-
-# Check if API model file has some data or not else exit.
-
-if [ -s "$AZURESTACK_CONFIGURATION" ] ; then
-    log_level -i "Found $AZURESTACK_CONFIGURATION in $PWD and is greater than zero bytes"
-else
-    log_level -i "File $AZURESTACK_CONFIGURATION does not exist in $PWD or is zero length."
-    exit 1
-fi
 
 METADATA=`curl --retry 10 $TENANT_ENDPOINT/metadata/endpoints?api-version=2015-01-01`
 ENDPOINT_GRAPH_ENDPOINT=`echo $METADATA  | jq '.graphEndpoint' | tr -d \"`
@@ -320,8 +311,14 @@ if [ $IDENTITY_SYSTEM == "ADFS" ] ; then
     log_level -i "Parsing secret to get pem and pfx for ADFS scenario."
     CERTIFICATE_PFX_LOCATION="spnauth.pfx"
     CERTIFICATE_PEM_LOCATION="spnauth.pem"
-    convert_to_cert $SPN_CLIENT_SECRET $CERTIFICATE_PFX_LOCATION $CERTIFICATE_PEM_LOCATION
+    KEY_LOCATION="spnauth.key"
+    CERTIFICATE_LOCATION="spnauth.crt"
+    convert_to_cert $SPN_CLIENT_SECRET $CERTIFICATE_PFX_LOCATION $CERTIFICATE_PEM_LOCATION $CERTIFICATE_LOCATION $KEY_LOCATION 
     log_level -i "Able to get PFX value in : '$CERTIFICATE_PFX_LOCATION'  and pem value in '$CERTIFICATE_PEM_LOCATION'."
+
+    log_level -i "Append adfs back to Active directory endpoint as it is required in Azure CLI to register and login."
+    ENDPOINT_ACTIVE_DIRECTORY_ENDPOINT=${ENDPOINT_ACTIVE_DIRECTORY_ENDPOINT}adfs
+    log_level -i "Final ACTIVE_DIRECTORY endpoint value for adfs is: $ENDPOINT_ACTIVE_DIRECTORY_ENDPOINT."
        
 else
     log_level -i "In AAD section to get(Active_Directory_Endpoint) configurations.."
@@ -329,50 +326,26 @@ else
     log_level -i "Active directory endpoint is: $ENDPOINT_ACTIVE_DIRECTORY_ENDPOINT"
 fi
 
+IDENTITY_SYSTEM_LOWER=`echo "$IDENTITY_SYSTEM" | tr '[:upper:]' '[:lower:]'`
 
-sudo cat $AZURESTACK_CONFIGURATION | jq --arg ENDPOINT_ACTIVE_DIRECTORY_RESOURCEID $ENDPOINT_ACTIVE_DIRECTORY_RESOURCEID '.properties.customCloudProfile.environment.serviceManagementEndpoint = $ENDPOINT_ACTIVE_DIRECTORY_RESOURCEID'|\
-jq --arg ENDPOINT_ACTIVE_DIRECTORY_ENDPOINT $ENDPOINT_ACTIVE_DIRECTORY_ENDPOINT '.properties.customCloudProfile.environment.activeDirectoryEndpoint = $ENDPOINT_ACTIVE_DIRECTORY_ENDPOINT' | \
-jq --arg ENDPOINT_GRAPH_ENDPOINT $ENDPOINT_GRAPH_ENDPOINT '.properties.customCloudProfile.environment.graphEndpoint = $ENDPOINT_GRAPH_ENDPOINT' | \
-jq --arg TENANT_ENDPOINT $TENANT_ENDPOINT '.properties.customCloudProfile.environment.resourceManagerEndpoint = $TENANT_ENDPOINT' | \
-jq --arg ENDPOINT_GALLERY $ENDPOINT_GALLERY '.properties.customCloudProfile.environment.galleryEndpoint = $ENDPOINT_GALLERY' | \
-jq --arg SUFFIXES_STORAGE_ENDPOINT $SUFFIXES_STORAGE_ENDPOINT '.properties.customCloudProfile.environment.storageEndpointSuffix = $SUFFIXES_STORAGE_ENDPOINT' | \
-jq --arg SUFFIXES_KEYVAULT_DNS $SUFFIXES_KEYVAULT_DNS '.properties.customCloudProfile.environment.keyVaultDNSSuffix = $SUFFIXES_KEYVAULT_DNS' | \
-jq --arg FQDN_ENDPOINT_SUFFIX $FQDN_ENDPOINT_SUFFIX '.properties.customCloudProfile.environment.resourceManagerVMDNSSuffix = $FQDN_ENDPOINT_SUFFIX' | \
-jq --arg REGION_NAME $REGION_NAME '.location = $REGION_NAME' | \
-jq --arg MASTER_DNS_PREFIX $MASTER_DNS_PREFIX '.properties.masterProfile.dnsPrefix = $MASTER_DNS_PREFIX' | \
-jq '.properties.agentPoolProfiles[0].count'=$AGENT_COUNT | \
-jq --arg AGENT_SIZE $AGENT_SIZE '.properties.agentPoolProfiles[0].vmSize=$AGENT_SIZE' | \
-jq '.properties.masterProfile.count'=$MASTER_COUNT | \
-jq --arg MASTER_SIZE $MASTER_SIZE '.properties.masterProfile.vmSize=$MASTER_SIZE' | \
-jq --arg ADMIN_USERNAME $ADMIN_USERNAME '.properties.linuxProfile.adminUsername = $ADMIN_USERNAME' | \
-jq --arg SSH_PUBLICKEY "${SSH_PUBLICKEY}" '.properties.linuxProfile.ssh.publicKeys[0].keyData = $SSH_PUBLICKEY' >  $AZURESTACK_CONFIGURATION_TEMP
-
-log_level -i "Checking and moving temp file data to main api model file."
-check_and_move_azurestack_configuration $AZURESTACK_CONFIGURATION_TEMP $AZURESTACK_CONFIGURATION
 
 if [ $IDENTITY_SYSTEM == "ADFS" ] ; then
-
     log_level -i "In ADFS section to update (servicePrincipalProfile, authenticationMethod ) configurations."
-    IDENTITY_SYSTEM_LOWER=`echo "$IDENTITY_SYSTEM" | tr '[:upper:]' '[:lower:]'`
-    sudo cat $AZURESTACK_CONFIGURATION | jq --arg IDENTITY_SYSTEM_LOWER $IDENTITY_SYSTEM_LOWER '.properties.customCloudProfile.identitySystem=$IDENTITY_SYSTEM_LOWER' | \
-    jq --arg authenticationMethod "client_certificate" '.properties.customCloudProfile.authenticationMethod=$authenticationMethod' | \
-    jq --arg SPN_CLIENT_ID $SPN_CLIENT_ID '.properties.servicePrincipalProfile.clientId = $SPN_CLIENT_ID' | \
-    jq --arg SPN_CLIENT_SECRET_KEYVAULT_ID $SPN_CLIENT_SECRET_KEYVAULT_ID '.properties.servicePrincipalProfile.keyvaultSecretRef.vaultID = $SPN_CLIENT_SECRET_KEYVAULT_ID' | \
-    jq --arg SPN_CLIENT_SECRET_KEYVAULT_SECRET_NAME $SPN_CLIENT_SECRET_KEYVAULT_SECRET_NAME '.properties.servicePrincipalProfile.keyvaultSecretRef.secretName = $SPN_CLIENT_SECRET_KEYVAULT_SECRET_NAME' >  $AZURESTACK_CONFIGURATION_TEMP
-       
-    log_level -i "Append adfs back to Active directory endpoint as it is required in Azure CLI to register and login."
-    ENDPOINT_ACTIVE_DIRECTORY_ENDPOINT=${ENDPOINT_ACTIVE_DIRECTORY_ENDPOINT}adfs
-    log_level -i "Final ACTIVE_DIRECTORY endpoint value for adfs is: $ENDPOINT_ACTIVE_DIRECTORY_ENDPOINT."
+    export VAULT_ID=$SPN_CLIENT_SECRET_KEYVAULT_ID
+    export SECRET_NAME=$SPN_CLIENT_SECRET_KEYVAULT_SECRET_NAME
+    export AUTHENTICATION_METHOD="client_certificate"
+    export SPN_CLIENT_SECRET=$CERTIFICATE_PEM_LOCATION
+    export IDENTITY_SYSTEM="adfs"
 else
     log_level -i "In AAD section to update (servicePrincipalProfile ) configurations."
-    sudo cat $AZURESTACK_CONFIGURATION | jq --arg SPN_CLIENT_ID $SPN_CLIENT_ID '.properties.servicePrincipalProfile.clientId = $SPN_CLIENT_ID' | \
-    jq --arg SPN_CLIENT_SECRET $SPN_CLIENT_SECRET '.properties.servicePrincipalProfile.secret = $SPN_CLIENT_SECRET' >  $AZURESTACK_CONFIGURATION_TEMP
+    export AUTHENTICATION_METHOD="client_secret"
+    export VAULT_ID="local"
+    export SECRET_NAME="local"
+    export CUSTOM_CLOUD_SECRET=$SPN_CLIENT_SECRET
+    export IDENTITY_SYSTEM="azure_ad"
 fi
 
-log_level -i "Checking and moving temp file data(servicePrincipalProfile) to main api model file."
-check_and_move_azurestack_configuration $AZURESTACK_CONFIGURATION_TEMP $AZURESTACK_CONFIGURATION
-
-log_level -i "Completed building API model file based on passed stamp information and other parameters."
+export CUSTOM_CLOUD_CLIENT_ID=$SPN_CLIENT_ID
 
 #####################################################################################
 # Section to generate ARM template using AKS Engine, login using Azure CLI and deploy the template.
@@ -385,15 +358,30 @@ retrycmd_if_failure 5 10 az cloud set -n $ENVIRONMENT_NAME
 log_level -i "Update cloud profile with value: $HYBRID_PROFILE."
 retrycmd_if_failure 5 10 az cloud update --profile $HYBRID_PROFILE
 
-export CLIENT_ID=$SPN_CLIENT_ID
+cd $ROOT_PATH/src/github.com/Azure/aks-engine
+
+sudo wget $AKSENGINE_API_MODEL
+
+CLUSTER_DEFN=${AKSENGINE_API_MODEL##*/}
+
+export CLIENT_ID=$SPN_CLIENT_ID > test_env
 export CLIENT_SECRET=$SPN_CLIENT_SECRET
 export TENANT_ID=$TENANT_ID
 export SUBSCRIPTION_ID=$TENANT_SUBSCRIPTION_ID
 export CLEANUP_ON_EXIT=false
-export CLUSTER_DEFINITION=$AZURE_CONFIGURATION
+export CLUSTER_DEFINITION=$CLUSTER_DEFN
 export LOCATION=$REGION_NAME
-
-cd $ROOT_PATH/src/github.com/Azure/aks-engine
+export API_PROFILE="2018-03-01-hybrid"
+export SERVICE_MANAGEMENT_ENDPOINT=$ENDPOINT_ACTIVE_DIRECTORY_RESOURCEID
+export RESOURCE_MANAGER_ENDPOINT=$TENANT_ENDPOINT
+export ACTIVE_DIRECTORY_ENDPOINT=$ENDPOINT_ACTIVE_DIRECTORY_ENDPOINT
+export GALLERY_ENDPOINT=$ENDPOINT_GALLERY
+export GRAPH_ENDPOINT=$ENDPOINT_GRAPH_ENDPOINT
+export STORAGE_ENDPOINT_SUFFIX=$SUFFIXES_STORAGE_ENDPOINT
+export KEY_VAULT_DNS_SUFFIX=$SUFFIXES_KEYVAULT_DNS
+export SERVICE_MANAGEMENT_VM_DNS_SUFFIX="cloudapp.net"
+export RESOURCE_MANAGER_VM_DNS_SUFFIX=$FQDN_ENDPOINT_SUFFIX
+export SSH_KEY_NAME="id_rsa"
 
 make bootstrap
 
@@ -401,17 +389,56 @@ make validate-dependencies
 
 make build-cross
 
-if [ -f "./bin/aks-engine" ]; then
-    log-level -i "Found aks-engine binary"
+if [ -f "./bin/aks-engine" ] ; then
+    log_level -i "Found aks-engine binary"
 else
-    log-level -e "Aks-engine binary not found. Can't run E2E Test"
+    log_level -e "Aks-engine binary not found. Can't run E2E Test"
     exit 1
 fi
 
+log_level -i "------------------------------------------------------------------------"
+log_level -i "Environment parameter details:"
+log_level -i "CLIENT_ID: $CLIENT_ID"
+log_level -i "CLIENT_SECRET :$CLIENT_SECRET"
+log_level -i "TENANT_ID: $TENANT_ID"
+log_level -i "SUBSCRIPTION_ID: $SUBSCRIPTION_ID"
+log_level -i "CLEANUP_ON_EXIT: $CLEANUP_ON_EXIT"
+log_level -i "LOCATION: $LOCATION"
+log_level -i "API_PROFILE: $API_PROFILE"
+log_level -i "RESOURCE_MANAGER_ENDPOINT : $RESOURCE_MANAGER_ENDPOINT"
+log_level -i "ACTIVE_DIRECTORY_ENDPOINT : $ACTIVE_DIRECTORY_ENDPOINT"
+log_level -i "GALLERY_ENDPOINT: $GALLERY_ENDPOINT"
+log_level -i "GRAPH_ENDPOINT: $GRAPH_ENDPOINT"
+log_level -i "STORAGE_ENDPOINT_SUFFIX: $STORAGE_ENDPOINT_SUFFIX"
+log_level -i "KEY_VAULT_DNS_SUFFIX: $KEY_VAULT_DNS_SUFFIX"
+log_level -i "SERVICE_MANAGEMENT_VM_DNS_SUFFIX: $SERVICE_MANAGEMENT_VM_DNS_SUFFIX"
+log_level -i "RESOURCE_MANAGER_VM_DNS_SUFFIX: $RESOURCE_MANAGER_VM_DNS_SUFFIX"
+log_level -i "SSH_KEY_NAME: $SSH_KEY_NAME"
+log_level -i "IDENTITY_SYSTEM: $IDENTITY_SYSTEM" 
+log_level -i "AUTHENTICATION_METHOD: $AUTHENTICATION_METHOD"
+log_level -i "VAULT_ID: $VAULT_ID"
+log_level -i "SECRET_NAME: $SECRET_NAME"
+log_level -i "CUSTOM_CLOUD_CLIENT_ID: $CUSTOM_CLOUD_CLIENT_ID"
+log_level -i "CUSTOM_CLOUD_SECRET: $CUSTOM_CLOUD_SECRET"
+log_level -i "CLUSTER_DEFINITION $CLUSTER_DEFINITION"
+log_level -i "SERVICE_MANAGEMENT_ENDPOINT: $SERVICE_MANAGEMENT_ENDPOINT"
+log_level -i "REGION_NAME: $REGION_NAME"
+log_level -i "RESOURCE_GROUP_NAME: $RESOURCE_GROUP_NAME"
+log_level -i "TENANT_ID: $TENANT_ID"
+log_level -i "------------------------------------------------------------------------"
 
-#sudo touch aks-engine-E2E.txt
+set +e
+make test-kubernetes > deploy_test_results 
+set -e
 
-make test-kubernetes
+if [ $RESULT -lt 3 ] ; then
+    exit 0
+else
+    exit $RESULT
+fi
+
+
+
 
 
 
