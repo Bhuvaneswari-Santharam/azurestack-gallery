@@ -195,7 +195,7 @@ ROOT_PATH=/home/azureuser/src/github.com/Azure/aks-engine
 FILENAME=$(basename $FILE)
 download_scripts $FILE $FILENAME
 
-scp -q -r $SCRIPTSFOLDER/*.sh $USER@$DVM_HOST:$ROOT_PATH
+scp -q -i $IDENTITYFILE $SCRIPTSFOLDER/*.sh $USER@$DVM_HOST:$ROOT_PATH
 
 if [ $FILENAME == "aksEngineScale.sh" ] ; then
     ssh -q -t $USER@$DVM_HOST "sudo chmod 744 $FILENAME; ./$FILENAME --tenant-id $TENANT_ID --subscription-id $SUBSCRIPTION_ID --node-count $PARAMETER ;"
