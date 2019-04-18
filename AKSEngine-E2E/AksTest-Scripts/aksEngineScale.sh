@@ -108,8 +108,8 @@ cd $ROOT_PATH
 log_level -i "Getting Resource group and region"
 
 export RESOURCE_GROUP=`ls -dt1 _output/* | head -n 1 | cut -d/ -f2 | cut -d. -f1`
-export APIMODEL_FILE=`ls -dt1 _output/* | head -n 1 | cut -d/ -f2`
 export REGION=`ls -dt1 _output/* | head -n 1 | cut -d/ -f2 | cut -d- -f2`
+export APIMODEL_FILE=$RESOURCE_GROUP.json
 
 if [ $RESOURCE_GROUP == "" ] ; then
     log_level -i "Resource group not found.Scale can not be performed"
