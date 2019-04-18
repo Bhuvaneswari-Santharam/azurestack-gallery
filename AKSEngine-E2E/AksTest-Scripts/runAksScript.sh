@@ -172,24 +172,16 @@ if [ ! -d $SCRIPTSFOLDER ]; then
 fi
 echo "[INFO] $SCRIPTSFOLDER"
 
-# Backup .ssh/config
-SSH_CONFIG_BAK=~/.ssh/config.$NOW
-if [ ! -f ~/.ssh/config ]; then touch ~/.ssh/config; fi
-mv ~/.ssh/config $SSH_CONFIG_BAK;
+AZURE_USER="azureuser"
 
-# Backup .ssh/id_rsa
-SSH_KEY_BAK=~/.ssh/id_rsa.$NOW
-if [ ! -f ~/.ssh/id_rsa ]; then touch ~/.ssh/id_rsa; fi
-mv ~/.ssh/id_rsa $SSH_KEY_BAK;
-cp $IDENTITYFILE ~/.ssh/id_rsa
+IDENTITY_FILE_BACKUP_PATH="/home/azureuser/IDENTITY_FILEBACKUP"
 
-echo "Host *" >> ~/.ssh/config
-echo "    StrictHostKeyChecking $STRICT_HOST_KEY_CHECKING" >> ~/.ssh/config
-echo "    UserKnownHostsFile /dev/null" >> ~/.ssh/config
-echo "    LogLevel ERROR" >> ~/.ssh/config
+echo "Backing up identity files at ($IDENTITY_FILE_BACKUP_PATH)"
+ssh -t -i $IDENTITYFILE $USER@$DVM_HOST "if [ -f /home/$AZURE_USER/.ssh/id_rsa ]; then mkdir -p $IDENTITY_FILE_BACKUP_PATH;  sudo mv /home/$AZURE_USER/.ssh/id_rsa $IDENTITY_FILE_BACKUP_PATH; fi;"
 
-echo "[$(date +%Y%m%d%H%M%S)][INFO] Testing SSH keys"
-ssh -q $USER@$DVM_HOST "exit"
+echo -i "Copying over new identity file"
+scp -i $IDENTITYFILE $IDENTITYFILE $USER@$DVM_HOST:/home/$AZURE_USER/.ssh/id_rsa
+
 
 ROOT_PATH=/home/azureuser
 FILENAME=$(basename $FILE)
@@ -198,11 +190,11 @@ download_scripts $FILE $FILENAME
 scp -q -i $IDENTITYFILE $SCRIPTSFOLDER/*.sh $USER@$DVM_HOST:$ROOT_PATH
 
 if [ $FILENAME == "aksEngineScale.sh" ] ; then
-    ssh -q -t $USER@$DVM_HOST "sudo chmod 744 $FILENAME; ./$FILENAME --tenant-id $TENANT_ID --subscription-id $SUBSCRIPTION_ID --node-count $PARAMETER ;"
+    ssh -t -i $IDENTITYFILE $USER@$DVM_HOST "./$FILENAME --tenant-id $TENANT_ID --subscription-id $SUBSCRIPTION_ID --node-count $PARAMETER"
 fi
 
 if [ $FILENAME == "aksEngineUpgrade.sh" ] ; then
-    ssh -q -t $USER@$DVM_HOST "sudo chmod 744 $FILENAME; ./$FILENAME --tenant-id $TENANT_ID --subscription-id $SUBSCRIPTION_ID --upgrade-version $PARAMETER ;"
+    ssh -t -i $IDENTITYFILE $USER@$DVM_HOST "./$FILENAME --tenant-id $TENANT_ID --subscription-id $SUBSCRIPTION_ID --upgrade-version $PARAMETER ;"
 fi
 
 
