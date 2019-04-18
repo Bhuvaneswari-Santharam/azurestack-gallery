@@ -124,7 +124,7 @@ fi
 
 cd $ROOT_PATH/_output
 
-chmod 744 $APIMODEL_FILE
+sudo chown -R azureuser $ROOT_PATH/_output/$RESOURCE_GROUP
 
 CLIENT_ID=$(cat $ROOT_PATH/_output/$APIMODEL_FILE | jq '.properties.servicePrincipalProfile.clientId'| tr -d '"')
 FQDN_ENDPOINT_SUFFIX=$(cat $ROOT_PATH/_output/$APIMODEL_FILE | jq '.properties.customCloudProfile.environment.resourceManagerVMDNSSuffix' | tr -d '"')
