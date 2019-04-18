@@ -170,7 +170,7 @@ SCRIPTSFOLDER="./AksEngineScripts/scripts"
 if [ ! -d $SCRIPTSFOLDER ]; then
     mkdir -p $SCRIPTSFOLDER
 fi
-
+echo "[INFO] $SCRIPTSFOLDER"
 
 # Backup .ssh/config
 SSH_CONFIG_BAK=~/.ssh/config.$NOW
