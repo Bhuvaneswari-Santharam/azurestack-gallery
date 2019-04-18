@@ -151,6 +151,7 @@ echo "NODE_COUNT:$NODE_COUNT"
 
 
 cd $ROOT_PATH
+sudo chown -R azureuser $ROOT_PATH/_output/$RESOURCE_GROUP
 
 if [ $IDENTITY_SYSTEM == "adfs" ] ; then
    
