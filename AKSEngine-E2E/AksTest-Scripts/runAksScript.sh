@@ -191,7 +191,7 @@ echo "    LogLevel ERROR" >> ~/.ssh/config
 echo "[$(date +%Y%m%d%H%M%S)][INFO] Testing SSH keys"
 ssh -q $USER@$DVM_HOST "exit"
 
-ROOT_PATH=/home/azureuser/src/github.com/Azure/aks-engine
+ROOT_PATH=/home/azureuser
 FILENAME=$(basename $FILE)
 download_scripts $FILE $FILENAME
 
