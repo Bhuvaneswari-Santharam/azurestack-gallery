@@ -110,6 +110,13 @@ then
     printUsage
 fi
 
+if [ -z "$PARAMETER" ]
+then
+    echo ""
+    echo "[ERR] --parameter should be provided"
+    printusuage
+fi
+
 if [ ! -f $IDENTITYFILE ]
 then
     echo ""
