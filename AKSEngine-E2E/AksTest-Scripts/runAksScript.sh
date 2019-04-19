@@ -1,32 +1,5 @@
 #!/bin/bash
 
-function restore_ssh_config
-{
-    # Restore only if previously backed up
-    if [[ -v SSH_CONFIG_BAK ]]; then
-        if [ -f $SSH_CONFIG_BAK ]; then
-            rm ~/.ssh/config
-            mv $SSH_CONFIG_BAK ~/.ssh/config
-        fi
-    fi
-    
-    # Restore only if previously backed up
-    if [[ -v SSH_KEY_BAK ]]; then
-        if [ -f $SSH_KEY_BAK ]; then
-            rm ~/.ssh/id_rsa
-            mv $SSH_KEY_BAK ~/.ssh/id_rsa
-            # Remove if empty
-            if [ -a ~/.ssh/id_rsa -a ! -s ~/.ssh/id_rsa ]; then
-                rm ~/.ssh/id_rsa
-            fi
-        fi
-    fi
-}
-
-# Restorey SSH config file always, even if the script ends with an error
-trap restore_ssh_config EXIT
-
-
 function printUsage
 {
     echo ""
@@ -103,10 +76,6 @@ do
         -p|--parameter)
             PARAMETER="$2"
             shift 2
-        ;;
-        --disable-host-key-checking)
-            STRICT_HOST_KEY_CHECKING="no"
-            shift
         ;;
         -h|--help)
             printUsage
