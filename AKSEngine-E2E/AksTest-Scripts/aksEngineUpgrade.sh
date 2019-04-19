@@ -39,7 +39,7 @@ do
 
         --upgrade-version)
 
-            UPGRADE_VERISON="$2"
+            UPGRADE_VERSION="$2"
 
             shift 2
 
@@ -84,7 +84,7 @@ then
 
     echo ""
 
-    echo "[ERR] --upgrade-verison is required"
+    echo "[ERR] --upgrade-version is required"
 
     printUsage
 
@@ -167,7 +167,7 @@ if [ $IDENTITY_SYSTEM == "adfs" ] ; then
         --client-id $CLIENT_ID \
         --private-key-path $KEY_LOCATION \
         --certificate-path $CERT_LOCATION \
-        --upgrade-version $UPGRADE_VERISON \
+        --upgrade-version $UPGRADE_VERSION \
         --force || exit 1
 else
     CLIENT_SECRET=$(cat $ROOT_PATH/_output/$APIMODEL_FILE | jq '.properties.servicePrincipalProfile.secret' | tr -d '"')
