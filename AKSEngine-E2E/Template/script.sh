@@ -144,33 +144,32 @@ log_level -i "System information: $(sudo uname -a)"
 WAIT_TIME_SECONDS=20
 log_level -i "Waiting for $WAIT_TIME_SECONDS seconds for system to get into stable state."
 sleep $WAIT_TIME_SECONDS
+#####################################################################################
 
-# Script parameters
 log_level -i "------------------------------------------------------------------------"
-log_level -i "Input parameter details:"
-log_level -i "ADMIN_USERNAME: $ADMIN_USERNAME"
-log_level -i "AGENT_COUNT: $AGENT_COUNT"
-log_level -i "AGENT_SIZE: $AGENT_SIZE"
-log_level -i "IDENTITY_SYSTEM: $IDENTITY_SYSTEM" 
-log_level -i "K8S_AZURE_CLOUDPROVIDER_VERSION: $K8S_AZURE_CLOUDPROVIDER_VERSION"
-log_level -i "MASTER_COUNT: $MASTER_COUNT"
-log_level -i "MASTER_DNS_PREFIX: $MASTER_DNS_PREFIX"
-log_level -i "MASTER_SIZE: $MASTER_SIZE"
-log_level -i "PUBLICIP_DNS: $PUBLICIP_DNS"
-log_level -i "PUBLICIP_FQDN: $PUBLICIP_FQDN"
-log_level -i "REGION_NAME: $REGION_NAME"
-log_level -i "RESOURCE_GROUP_NAME: $RESOURCE_GROUP_NAME"
-log_level -i "SSH_PUBLICKEY: $SSH_PUBLICKEY"
-log_level -i "STORAGE_PROFILE: $STORAGE_PROFILE"
-log_level -i "TENANT_ID: $TENANT_ID"
-log_level -i "TENANT_SUBSCRIPTION_ID: $TENANT_SUBSCRIPTION_ID"
-log_level -i "AKSENGINE_NODE_COUNT: $AKSENGINE_NODE_COUNT"
-log_level -i "AKSENGINE_UPGRADE_VERSION: $AKSENGINE_UPGRADE_VERSION"
-log_level -i "AKSENGINE_API_MODEL: $AKSENGINE_API_MODEL"
-log_level -i "AKSENGINE_REPO: $AKSENGINE_REPO"
-log_level -i "AKSENGINE_BRANCH: $AKSENGINE_BRANCH"
+log_level -i "ARM parameters"
 log_level -i "------------------------------------------------------------------------"
-
+log_level -i "ADMIN_USERNAME:                           $ADMIN_USERNAME"
+log_level -i "AGENT_COUNT:                              $AGENT_COUNT"
+log_level -i "AGENT_SIZE:                               $AGENT_SIZE"
+log_level -i "AKSENGINE_API_MODEL:                      $AKSENGINE_API_MODEL"
+log_level -i "AKSENGINE_BRANCH:                         $AKSENGINE_BRANCH"
+log_level -i "AKSENGINE_NODE_COUNT:                     $AKSENGINE_NODE_COUNT"
+log_level -i "AKSENGINE_REPO:                           $AKSENGINE_REPO"
+log_level -i "AKSENGINE_UPGRADE_VERSION:                $AKSENGINE_UPGRADE_VERSION"
+log_level -i "IDENTITY_SYSTEM:                          $IDENTITY_SYSTEM"
+log_level -i "K8S_AZURE_CLOUDPROVIDER_VERSION:          $K8S_AZURE_CLOUDPROVIDER_VERSION" 
+log_level -i "MASTER_COUNT:                             $MASTER_COUNT"
+log_level -i "MASTER_DNS_PREFIX:                        $MASTER_DNS_PREFIX"
+log_level -i "MASTER_SIZE:                              $MASTER_SIZE"
+log_level -i "PUBLICIP_DNS:                             $PUBLICIP_DNS"
+log_level -i "PUBLICIP_FQDN:                            $PUBLICIP_FQDN"
+log_level -i "REGION_NAME:                              $REGION_NAME"
+log_level -i "RESOURCE_GROUP_NAME:                      $RESOURCE_GROUP_NAME"
+log_level -i "SSH_PUBLICKEY:                            ----"
+log_level -i "STORAGE_PROFILE:                          $STORAGE_PROFILE"
+log_level -i "TENANT_ID:                                $TENANT_ID"
+log_level -i "TENANT_SUBSCRIPTION_ID:                   $TENANT_SUBSCRIPTION_ID"
 #####################################################################################
 # Install all prequisite. 
 log_level -i "Update the system to latest."
@@ -263,6 +262,7 @@ SUFFIXES_KEYVAULT_DNS=.vault.$REGION_NAME.$EXTERNAL_FQDN
 FQDN_ENDPOINT_SUFFIX=cloudapp.$EXTERNAL_FQDN
 ENVIRONMENT_NAME=AzureStackCloud
 
+
 log_level -i "EXTERNAL_FQDN is:$EXTERNAL_FQDN"
 log_level -i "TENANT_ENDPOINT is:$TENANT_ENDPOINT"
 
@@ -299,6 +299,7 @@ METADATA=`curl --retry 10 $TENANT_ENDPOINT/metadata/endpoints?api-version=2015-0
 ENDPOINT_GRAPH_ENDPOINT=`echo $METADATA  | jq '.graphEndpoint' | tr -d \"`
 ENDPOINT_GALLERY=`echo $METADATA  | jq '.galleryEndpoint' | tr -d \"`
 ENDPOINT_ACTIVE_DIRECTORY_RESOURCEID=`echo $METADATA  | jq '.authentication.audiences'[0] | tr -d \"`
+ENDPOINT_PORTAL=`echo $METADATA | jq '.portalEndpoint' | xargs`
 log_level -i "Endpoint active directory resource id is: $ENDPOINT_ACTIVE_DIRECTORY_RESOURCEID."
 
 if [ $IDENTITY_SYSTEM == "ADFS" ] ; then
@@ -382,6 +383,7 @@ export KEY_VAULT_DNS_SUFFIX=$SUFFIXES_KEYVAULT_DNS
 export SERVICE_MANAGEMENT_VM_DNS_SUFFIX="cloudapp.net"
 export RESOURCE_MANAGER_VM_DNS_SUFFIX=$FQDN_ENDPOINT_SUFFIX
 export SSH_KEY_NAME="id_rsa"
+export PORTAL_ENDPOINT=$ENDPOINT_PORTAL
 
 make bootstrap
 
@@ -398,13 +400,13 @@ fi
 
 log_level -i "------------------------------------------------------------------------"
 log_level -i "Environment parameter details:"
+log_level -i "API_PROFILE: $API_PROFILE"
 log_level -i "CLIENT_ID: $CLIENT_ID"
 log_level -i "CLIENT_SECRET :$CLIENT_SECRET"
 log_level -i "TENANT_ID: $TENANT_ID"
 log_level -i "SUBSCRIPTION_ID: $SUBSCRIPTION_ID"
 log_level -i "CLEANUP_ON_EXIT: $CLEANUP_ON_EXIT"
 log_level -i "LOCATION: $LOCATION"
-log_level -i "API_PROFILE: $API_PROFILE"
 log_level -i "RESOURCE_MANAGER_ENDPOINT : $RESOURCE_MANAGER_ENDPOINT"
 log_level -i "ACTIVE_DIRECTORY_ENDPOINT : $ACTIVE_DIRECTORY_ENDPOINT"
 log_level -i "GALLERY_ENDPOINT: $GALLERY_ENDPOINT"
@@ -425,6 +427,7 @@ log_level -i "SERVICE_MANAGEMENT_ENDPOINT: $SERVICE_MANAGEMENT_ENDPOINT"
 log_level -i "REGION_NAME: $REGION_NAME"
 log_level -i "RESOURCE_GROUP_NAME: $RESOURCE_GROUP_NAME"
 log_level -i "TENANT_ID: $TENANT_ID"
+log_level -i "PORTAL_ENDPOINT: $ENDPOINT_PORTAL"
 log_level -i "------------------------------------------------------------------------"
 
 set +e
