@@ -193,7 +193,7 @@ fi
 log_level -i "Upgrading kubernetes cluster to version $UPGRADE_VERSION completed.Running E2E test..."
 
 cd $ROOT_PATH
-export CLUSTER_DEFINITION=$AKSENGINE_APIMODEL
+export CLUSTER_DEFINITION=_output/$APIMODEL_FILE
 export CLEANUP_ON_EXIT=false
 export NAME=$RESOURCE_GROUP
 export CLIENT_ID=$CLIENT_ID
