@@ -180,7 +180,7 @@ if [ $IDENTITY_SYSTEM == "adfs" ] ; then
     ./bin/aks-engine scale \
         --azure-env $AZURE_ENV \
         --subscription-id $SUBSCRIPTION_ID \
-        --deployment-dir $OUTPUT \
+        --api-model $OUTPUT \
         --location $REGION \
         --resource-group $RESOURCE_GROUP  \
         --master-FQDN $FQDN_ENDPOINT_SUFFIX \
@@ -203,7 +203,7 @@ else
     ./bin/aks-engine scale \
         --azure-env $AZURE_ENV \
         --subscription-id $SUBSCRIPTION_ID \
-        --deployment-dir $OUTPUT \
+        --api-model $OUTPUT \
         --location $REGION \
         --resource-group $RESOURCE_GROUP  \
         --master-FQDN $FQDN_ENDPOINT_SUFFIX
