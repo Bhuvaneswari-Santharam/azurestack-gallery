@@ -151,7 +151,7 @@ echo "UPGRADE_VERSION:$UPGRADE_VERSION"
 
 
 cd $ROOT_PATH
-sudo chown -R azureuser $ROOT_PATH/_output/$RESOURCE_GROUP
+sudo chown -R azureuser $ROOT_PATH
 
 if [ $IDENTITY_SYSTEM == "adfs" ] ; then
    
@@ -160,7 +160,7 @@ if [ $IDENTITY_SYSTEM == "adfs" ] ; then
 
     ./bin/aks-engine upgrade \
         --subscription-id $SUBSCRIPTION_ID \
-        --deployment-dir $OUTPUT \
+        --api-model $OUTPUT \
         --location $REGION \
         --resource-group $RESOURCE_GROUP  \
         --auth-method $AUTH_METHOD \
@@ -180,7 +180,7 @@ else
     
     ./bin/aks-engine upgrade \
         --subscription-id $SUBSCRIPTION_ID \
-        --deployment-dir $OUTPUT \
+        --api-model $OUTPUT \
         --location $REGION \
         --resource-group $RESOURCE_GROUP  \
         --auth-method $AUTH_METHOD \
