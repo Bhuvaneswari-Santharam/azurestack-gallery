@@ -124,7 +124,7 @@ fi
 
 cd $ROOT_PATH/_output
 
-sudo chown -R azureuser $ROOT_PATH/_output/$RESOURCE_GROUP
+sudo chown -R azureuser $ROOT_PATH
 
 CLIENT_ID=$(cat $ROOT_PATH/_output/$APIMODEL_FILE | jq '.properties.servicePrincipalProfile.clientId'| tr -d '"')
 FQDN_ENDPOINT_SUFFIX=$(cat $ROOT_PATH/_output/$APIMODEL_FILE | jq '.properties.customCloudProfile.environment.resourceManagerVMDNSSuffix' | tr -d '"')
@@ -218,7 +218,7 @@ fi
 log_level -i "Scaling of kubernetes cluster completed.Running E2E test..."
 
 cd $ROOT_PATH
-export CLUSTER_DEFINITION=$ROOT_PATH/_output/$APIMODEL_FILE
+export CLUSTER_DEFINITION=_output/$APIMODEL_FILE
 export CLEANUP_ON_EXIT=false
 export NAME=$RESOURCE_GROUP
 export CLIENT_ID=$CLIENT_ID
