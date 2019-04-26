@@ -254,23 +254,4 @@ export PORTAL_ENDPOINT=$ENDPOINT_PORTAL
 
 
 
-cd $ROOT_PATH
-set +e
-
-sudo make dev
-
-make test-kubernetes > scale_test_results
-exit
-set -e
-
-RESULT=$?
-log_level -i "Result: $RESULT"
-
-
-if [ $RESULT -lt 3 ] ; then
-    exit 0
-else
-    exit $RESULT
-fi
-
 
