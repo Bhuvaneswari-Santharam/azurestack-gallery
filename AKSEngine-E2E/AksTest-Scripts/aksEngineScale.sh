@@ -274,7 +274,6 @@ export PATH=$GOPATH:$GOROOT/bin:$PATH
 #####################################################################################
 
 
-sudo make bootstrap
 
 set +e
 
