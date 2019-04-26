@@ -272,16 +272,12 @@ export PATH=$GOPATH:$GOROOT/bin:$PATH
 
 
 #####################################################################################
-# Section to install golang-dep
 
-sudo curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-
-export PATH=$GOPATH/bin:$PATH
-#####################################################################################
 
 sudo make bootstrap
-make validate-dependencies
+
 set +e
+make validate-dependencies
 make test-kubernetes > scale_test_results
 set -e
 
