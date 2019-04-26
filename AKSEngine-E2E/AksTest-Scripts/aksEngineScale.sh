@@ -257,7 +257,7 @@ export PORTAL_ENDPOINT=$ENDPOINT_PORTAL
 cd $ROOT_PATH
 set +e
 
-make dev
+sudo make dev
 
 make test-kubernetes > scale_test_results
 exit
