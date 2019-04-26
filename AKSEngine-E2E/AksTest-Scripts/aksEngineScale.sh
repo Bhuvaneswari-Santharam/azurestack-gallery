@@ -160,7 +160,7 @@ echo "NODE_COUNT:$NODE_COUNT"
 cd $ROOT_PATH
 
 if [ $IDENTITY_SYSTEM == "adfs" ] ; then
-    $CLIENT_SECRET=$ROOT_PATH/spnauth.pem
+    CLIENT_SECRET=$ROOT_PATH/spnauth.pem
    
     KEY_LOCATION=$ROOT_PATH/spnauth.key
     CERT_LOCATION=$ROOT_PATH/spnauth.crt
