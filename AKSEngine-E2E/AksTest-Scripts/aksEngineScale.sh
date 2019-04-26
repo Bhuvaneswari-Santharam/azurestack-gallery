@@ -257,12 +257,11 @@ export PORTAL_ENDPOINT=$ENDPOINT_PORTAL
 #Section to install Go.
 
 
-ROOT_PATH=/home/azureuser
+ROOT_PATH_TEMP=/home/azureuser
 #sudo mkdir $ROOT_PATH
-sudo mkdir $ROOT_PATH/bin
-cd $ROOT_PATH
+cd $ROOT_PATH_TEMP
 sudo wget https://dl.google.com/go/go1.11.4.linux-amd64.tar.gz
-sudo tar -C  $ROOT_PATH/bin -xzf go1.11.4.linux-amd64.tar.gz
+sudo tar -C  $ROOT_PATH_TEMP/bin -xzf go1.11.4.linux-amd64.tar.gz
 
 sudo apt install gcc make -y
 
