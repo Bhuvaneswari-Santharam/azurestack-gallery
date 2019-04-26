@@ -277,7 +277,7 @@ export PATH=$GOPATH:$GOROOT/bin:$PATH
 sudo make bootstrap
 
 set +e
-make validate-dependencies
+
 make test-kubernetes > scale_test_results
 set -e
 
