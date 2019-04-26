@@ -146,7 +146,7 @@ export REGION=$REGION
 export TENANT_ID=$TENANT_ID
 export SUBSCRIPTION_ID=$TENANT_SUBSCRIPTION_ID
 export OUTPUT=$ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json
-export AGENT_POOL="agentpool1"
+export AGENT_POOL="linuxpool"
 
 echo "CLIENT_ID: $CLIENT_ID"
 echo "NAME:$RESOURCE_GROUP"
