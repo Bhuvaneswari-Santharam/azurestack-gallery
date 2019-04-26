@@ -184,6 +184,7 @@ if [ $IDENTITY_SYSTEM == "adfs" ] ; then
     export SECRET_NAME=$SECRET_NAME
     
        ./bin/aks-engine upgrade \
+        --azure-env $AZURE_ENV \
         --subscription-id $SUBSCRIPTION_ID \
         --api-model $OUTPUT \
         --location $REGION \
@@ -205,6 +206,7 @@ else
     fi
     
        ./bin/aks-engine upgrade \
+        --azure-env $AZURE_ENV \
         --subscription-id $SUBSCRIPTION_ID \
         --api-model $OUTPUT \
         --location $REGION \
