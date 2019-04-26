@@ -211,6 +211,7 @@ else
         --new-node-count $NODE_COUNT \
         --auth-method $AUTH_METHOD \
         --client-id $CLIENT_ID \
+        --client-secret $CLIENT_SECRET \
         --identity-system $IDENTITY_SYSTEM || exit 1
 
 fi
@@ -227,6 +228,8 @@ export SUBSCRIPTION_ID=$SUBSCRIPTION_ID
 export TIMEOUT=20m
 export LOCATION=$REGION
 export API_PROFILE="2018-03-01-hybrid"
+export CUSTOM_CLOUD_CLIENT_ID=$CLIENT_ID
+export CUSTOM_CLOUD_SECRET=$CLIENT_SECRET
 
 # Set the environment variables
 export GOPATH=/home/azureuser
