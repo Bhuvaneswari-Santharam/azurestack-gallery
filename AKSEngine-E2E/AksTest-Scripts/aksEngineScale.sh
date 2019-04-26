@@ -253,34 +253,14 @@ export SSH_KEY_NAME="id_rsa"
 export PORTAL_ENDPOINT=$ENDPOINT_PORTAL
 
 
-#####################################################################################
-#Section to install Go.
-
-
-ROOT_PATH_TEMP=/home/azureuser
-#sudo mkdir $ROOT_PATH
-cd $ROOT_PATH_TEMP
-sudo wget https://dl.google.com/go/go1.11.4.linux-amd64.tar.gz
-sudo tar -C  $ROOT_PATH_TEMP/bin -xzf go1.11.4.linux-amd64.tar.gz
-
-sudo apt install gcc make -y
-
-# Set the environment variables
-export GOPATH=/home/azureuser
-export GOROOT=/home/azureuser/bin/go
-export PATH=$GOPATH:$GOROOT/bin:$PATH
-
-go get github.com/onsi/ginkgo/ginkgo
-go get github.com/onsi/gomega/...
-
-export PATH=$GOPATH/bin:$PATH
-#####################################################################################
 
 cd $ROOT_PATH
-
 set +e
 
+make dev
+
 make test-kubernetes > scale_test_results
+exit
 set -e
 
 RESULT=$?
