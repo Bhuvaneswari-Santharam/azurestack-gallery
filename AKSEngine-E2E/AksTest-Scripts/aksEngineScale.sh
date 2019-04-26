@@ -139,7 +139,7 @@ SUFFIXES_STORAGE_ENDPOINT=$(cat $ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json
 SUFFIXES_KEYVAULT_DNS=$(cat $ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json | jq '.properties.customCloudProfile.environment.keyVaultDNSSuffix' | tr -d '"')
 ENDPOINT_PORTAL=$(cat $ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json | jq '.properties.customCloudProfile.portalURL' | tr -d '"')
 AZURE_ENV="AzureStackCloud"
-
+echo $TENANT_ENDPOINT
 echo "CLIENT_ID: $CLIENT_ID"
 
 if [ $CLIENT_ID == "" ] ; then
