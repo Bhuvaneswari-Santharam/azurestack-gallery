@@ -124,7 +124,7 @@ fi
 
 cd $ROOT_PATH/_output
 
-sudo chown -R azureuser /home/azureuser/src
+sudo chown -R azureuser /home/azureuser/src/github.com
 
 CLIENT_ID=$(cat $ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json | jq '.properties.servicePrincipalProfile.clientId'| tr -d '"')
 FQDN_ENDPOINT_SUFFIX=$(cat $ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json | jq '.properties.customCloudProfile.environment.resourceManagerVMDNSSuffix' | tr -d '"')
