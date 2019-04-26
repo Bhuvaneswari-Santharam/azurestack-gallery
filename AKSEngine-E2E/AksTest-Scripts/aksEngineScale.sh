@@ -130,6 +130,14 @@ CLIENT_ID=$(cat $ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json | jq '.properti
 FQDN_ENDPOINT_SUFFIX=$(cat $ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json | jq '.properties.customCloudProfile.environment.resourceManagerVMDNSSuffix' | tr -d '"')
 IDENTITY_SYSTEM=$(cat $ROOT_PATH/_output/$APIMODEL_FILE | jq '.properties.customCloudProfile.identitySystem' | tr -d '"')
 AUTH_METHOD=$(cat $ROOT_PATH/_output/$APIMODEL_FILE | jq '.properties.customCloudProfile.authenticationMethod' | tr -d '"')
+ENDPOINT_ACTIVE_DIRECTORY_RESOURCEID=$(cat $ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json | jq '.properties.customCloudProfile.environment.serviceManagementEndpoint' | tr -d '"')
+TENANT_ENDPOINT=$(cat $ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json | jq '.properties.customCloudProfile.environment.resourceManagerEndpoint' | tr -d '"')
+ENDPOINT_ACTIVE_DIRECTORY_ENDPOINT=$(cat $ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json | jq '.properties.customCloudProfile.environment.activeDirectoryEndpoint' | tr -d '"')
+ENDPOINT_GALLERY=$(cat $ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json | jq '.properties.customCloudProfile.environment.galleryEndpoint' | tr -d '"')
+ENDPOINT_GRAPH_ENDPOINT=$(cat $ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json | jq '.properties.customCloudProfile.environment.graphEndpoint' | tr -d '"')
+SUFFIXES_STORAGE_ENDPOINT=$(cat $ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json | jq '.properties.customCloudProfile.environment.storageEndpointSuffix' | tr -d '"')
+SUFFIXES_KEYVAULT_DNS=$(cat $ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json | jq '.properties.customCloudProfile.environment.keyVaultDNSSuffix' | tr -d '"')
+ENDPOINT_PORTAL=$(cat $ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json | jq '.properties.customCloudProfile.portalURL' | tr -d '"')
 AZURE_ENV="AzureStackCloud"
 
 echo "CLIENT_ID: $CLIENT_ID"
@@ -224,6 +232,7 @@ export CLUSTER_DEFINITION=_output/$APIMODEL_FILE
 export CLEANUP_ON_EXIT=false
 export NAME=$RESOURCE_GROUP
 export CLIENT_ID=$CLIENT_ID
+export CLIENT_SECRET=$CLIENT_SECRET
 export TENANT_ID=$TENANT_ID
 export SUBSCRIPTION_ID=$SUBSCRIPTION_ID
 export TIMEOUT=20m
@@ -231,6 +240,17 @@ export LOCATION=$REGION
 export API_PROFILE="2018-03-01-hybrid"
 export CUSTOM_CLOUD_CLIENT_ID=$CLIENT_ID
 export CUSTOM_CLOUD_SECRET=$CLIENT_SECRET
+export SERVICE_MANAGEMENT_ENDPOINT=$ENDPOINT_ACTIVE_DIRECTORY_RESOURCEID
+export RESOURCE_MANAGER_ENDPOINT=$TENANT_ENDPOINT
+export ACTIVE_DIRECTORY_ENDPOINT=$ENDPOINT_ACTIVE_DIRECTORY_ENDPOINT
+export GALLERY_ENDPOINT=$ENDPOINT_GALLERY
+export GRAPH_ENDPOINT=$ENDPOINT_GRAPH_ENDPOINT
+export STORAGE_ENDPOINT_SUFFIX=$SUFFIXES_STORAGE_ENDPOINT
+export KEY_VAULT_DNS_SUFFIX=$SUFFIXES_KEYVAULT_DNS
+export SERVICE_MANAGEMENT_VM_DNS_SUFFIX="cloudapp.net"
+export RESOURCE_MANAGER_VM_DNS_SUFFIX=$FQDN_ENDPOINT_SUFFIX
+export SSH_KEY_NAME="id_rsa"
+export PORTAL_ENDPOINT=$ENDPOINT_PORTAL
 
 # Set the environment variables
 export GOPATH=/home/azureuser
@@ -250,6 +270,5 @@ if [ $RESULT -lt 3 ] ; then
 else
     exit $RESULT
 fi
-
 
 
