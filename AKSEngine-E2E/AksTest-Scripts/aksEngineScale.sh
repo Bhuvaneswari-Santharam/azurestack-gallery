@@ -270,8 +270,8 @@ export GOPATH=/home/azureuser
 export GOROOT=/home/azureuser/bin/go
 export PATH=$GOPATH:$GOROOT/bin:$PATH
 
-sudo go get github.com/onsi/ginkgo/ginkgo
-sudo go get github.com/onsi/gomega/...
+go get github.com/onsi/ginkgo/ginkgo
+go get github.com/onsi/gomega/...
 
 export PATH=$GOPATH/bin:$PATH
 #####################################################################################
