@@ -256,7 +256,7 @@ export PORTAL_ENDPOINT=$ENDPOINT_PORTAL
 export GOPATH=/home/azureuser
 export GOROOT=/home/azureuser/bin/go
 export PATH=$GOPATH:$GOROOT/bin:$PATH
-make bootstrap
+sudo make bootstrap
 make validate-dependencies
 set +e
 make test-kubernetes > scale_test_results
