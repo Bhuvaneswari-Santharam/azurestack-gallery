@@ -194,7 +194,7 @@ if [ $IDENTITY_SYSTEM == "adfs" ] ; then
         --private-key-path $KEY_LOCATION \
         --certificate-path $CERT_LOCATION \
         --upgrade-version $UPGRADE_VERSION \
-        --identity-system $IDENTITY_SYSTEM
+        --identity-system $IDENTITY_SYSTEM \
         --force || exit 1
 
 else
@@ -216,7 +216,7 @@ else
         --client-id $CLIENT_ID \
         --upgrade-version $UPGRADE_VERSION \
         --client-secret $CLIENT_SECRET \
-        --identity-system $IDENTITY_SYSTEM
+        --identity-system $IDENTITY_SYSTEM \
         --force || exit 1
 
 fi
