@@ -252,10 +252,34 @@ export RESOURCE_MANAGER_VM_DNS_SUFFIX=$FQDN_ENDPOINT_SUFFIX
 export SSH_KEY_NAME="id_rsa"
 export PORTAL_ENDPOINT=$ENDPOINT_PORTAL
 
+
+#####################################################################################
+#Section to install Go.
+
+
+ROOT_PATH=/home/azureuser
+#sudo mkdir $ROOT_PATH
+sudo mkdir $ROOT_PATH/bin
+cd $ROOT_PATH
+sudo wget https://dl.google.com/go/go1.11.4.linux-amd64.tar.gz
+sudo tar -C  $ROOT_PATH/bin -xzf go1.11.4.linux-amd64.tar.gz
+
+sudo apt install gcc make -y
+
 # Set the environment variables
 export GOPATH=/home/azureuser
 export GOROOT=/home/azureuser/bin/go
 export PATH=$GOPATH:$GOROOT/bin:$PATH
+
+
+#####################################################################################
+# Section to install golang-dep
+
+sudo curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+
+export PATH=$GOPATH/bin:$PATH
+#####################################################################################
+
 sudo make bootstrap
 make validate-dependencies
 set +e
