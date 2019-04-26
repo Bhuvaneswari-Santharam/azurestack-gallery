@@ -92,8 +92,10 @@ fi
 
 
 
+
 # Basic details of the system
 log_level -i "Running  script as : $(whoami)"
+
 log_level -i "System information: $(sudo uname -a)"
 
 
@@ -102,34 +104,43 @@ cd $ROOT_PATH
 
 log_level -i "Getting Resource group and region"
 
-export RESOURCE_GROUP=`ls -dt1 _output/* | head -n 1 | cut -d/ -f2`
+export RESOURCE_GROUP=`ls -dt1 _output/* | head -n 1 | cut -d/ -f2 | cut -d. -f1`
 export REGION=`ls -dt1 _output/* | head -n 1 | cut -d/ -f2 | cut -d- -f2`
-
-echo "REGION: $REGION"
-echo "RESOURCE GROUP: $RESOURCE_GROUP"
+export APIMODEL_FILE=$RESOURCE_GROUP.json
 
 if [ $RESOURCE_GROUP == "" ] ; then
-    log_level -i "Resource group not found.Upgrade can not be performed"
+    log_level -i "Resource group not found.Scale can not be performed"
     exit 1
 fi
 
 if [ $REGION == "" ] ; then
-    log_level -i "Region not found.Upgrade can not be performed"
+    log_level -i "Region not found.Scale can not be performed"
     exit 1
 fi
 
-APIMODEL_FILE=$RESOURCE_GROUP.json
 
 cd $ROOT_PATH/_output
 
-CLIENT_ID=$(cat $ROOT_PATH/_output/$APIMODEL_FILE | jq '.properties.servicePrincipalProfile.clientId'| tr -d '"')
-FQDN_ENDPOINT_SUFFIX=$(cat $ROOT_PATH/_output/$APIMODEL_FILE | jq '.properties.customCloudProfile.environment.resourceManagerVMDNSSuffix' | tr -d '"')
+sudo chown -R azureuser /home/azureuser/src/github.com
+
+CLIENT_ID=$(cat $ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json | jq '.properties.servicePrincipalProfile.clientId'| tr -d '"')
+FQDN_ENDPOINT_SUFFIX=$(cat $ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json | jq '.properties.customCloudProfile.environment.resourceManagerVMDNSSuffix' | tr -d '"')
 IDENTITY_SYSTEM=$(cat $ROOT_PATH/_output/$APIMODEL_FILE | jq '.properties.customCloudProfile.identitySystem' | tr -d '"')
 AUTH_METHOD=$(cat $ROOT_PATH/_output/$APIMODEL_FILE | jq '.properties.customCloudProfile.authenticationMethod' | tr -d '"')
-AZURE_ENV_OLD=$(cat $ROOT_PATH/_output/$APIMODEL_FILE | jq '.properties.customCloudProfile.environment.name' | tr -d '"')
+ENDPOINT_ACTIVE_DIRECTORY_RESOURCEID=$(cat $ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json | jq '.properties.customCloudProfile.environment.serviceManagementEndpoint' | tr -d '"')
+TENANT_ENDPOINT=$(cat $ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json | jq '.properties.customCloudProfile.environment.resourceManagerEndpoint' | tr -d '"')
+ENDPOINT_ACTIVE_DIRECTORY_ENDPOINT=$(cat $ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json | jq '.properties.customCloudProfile.environment.activeDirectoryEndpoint' | tr -d '"')
+ENDPOINT_GALLERY=$(cat $ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json | jq '.properties.customCloudProfile.environment.galleryEndpoint' | tr -d '"')
+ENDPOINT_GRAPH_ENDPOINT=$(cat $ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json | jq '.properties.customCloudProfile.environment.graphEndpoint' | tr -d '"')
+SUFFIXES_STORAGE_ENDPOINT=$(cat $ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json | jq '.properties.customCloudProfile.environment.storageEndpointSuffix' | tr -d '"')
+SUFFIXES_KEYVAULT_DNS=$(cat $ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json | jq '.properties.customCloudProfile.environment.keyVaultDNSSuffix' | tr -d '"')
+ENDPOINT_PORTAL=$(cat $ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json | jq '.properties.customCloudProfile.portalURL' | tr -d '"')
+AZURE_ENV="AzureStackCloud"
+echo $TENANT_ENDPOINT
+echo "CLIENT_ID: $CLIENT_ID"
 
 if [ $CLIENT_ID == "" ] ; then
-    log_level -i "Client ID not found.Upgrade can not be performed"
+    log_level -i "Client ID not found.Scale can not be performed"
     exit 1
 fi
 
@@ -139,7 +150,8 @@ export NAME=$RESOURCE_GROUP
 export REGION=$REGION
 export TENANT_ID=$TENANT_ID
 export SUBSCRIPTION_ID=$TENANT_SUBSCRIPTION_ID
-export OUTPUT=$ROOT_PATH/_output/$RESOURCE_GROUP
+export OUTPUT=$ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json
+export AGENT_POOL="linuxpool"
 
 echo "CLIENT_ID: $CLIENT_ID"
 echo "NAME:$RESOURCE_GROUP"
@@ -151,14 +163,27 @@ echo "UPGRADE_VERSION:$UPGRADE_VERSION"
 
 
 cd $ROOT_PATH
-sudo chown -R azureuser $ROOT_PATH
 
 if [ $IDENTITY_SYSTEM == "adfs" ] ; then
+    CLIENT_SECRET=$ROOT_PATH/spnauth.pem
    
     KEY_LOCATION=$ROOT_PATH/spnauth.key
     CERT_LOCATION=$ROOT_PATH/spnauth.crt
 
-    ./bin/aks-engine upgrade \
+    if [ ! -f $KEY_LOCATION ] ; then
+        log_level -i "Private Key not found.Upgrade can not be performed"
+    fi
+
+    if [ ! -f $CERT_LOCATION ] ; then
+        log_level -i "Certificate not found.Upgrade can not be performed"
+    fi
+
+    VAULT_ID=$(cat $ROOT_PATH/_output/$APIMODEL_FILE | jq '.properties.servicePrincipalProfile.keyvaultSecretRef.vaultID' | tr -d '"')
+    SECRET_NAME=$(cat $ROOT_PATH/_output/$APIMODEL_FILE | jq '.properties.servicePrincipalProfile.keyvaultSecretRef.secretName' | tr -d '"')
+    export VAULT_ID=$VAULT_ID
+    export SECRET_NAME=$SECRET_NAME
+    
+       ./bin/aks-engine upgrade \
         --subscription-id $SUBSCRIPTION_ID \
         --api-model $OUTPUT \
         --location $REGION \
@@ -169,6 +194,7 @@ if [ $IDENTITY_SYSTEM == "adfs" ] ; then
         --certificate-path $CERT_LOCATION \
         --upgrade-version $UPGRADE_VERSION \
         --force || exit 1
+
 else
     CLIENT_SECRET=$(cat $ROOT_PATH/_output/$APIMODEL_FILE | jq '.properties.servicePrincipalProfile.secret' | tr -d '"')
     export CLIENT_SECRET=$CLIENT_SECRET
@@ -178,7 +204,7 @@ else
         exit 1
     fi
     
-    ./bin/aks-engine upgrade \
+       ./bin/aks-engine upgrade \
         --subscription-id $SUBSCRIPTION_ID \
         --api-model $OUTPUT \
         --location $REGION \
@@ -188,33 +214,35 @@ else
         --upgrade-version $UPGRADE_VERSION \
         --client-secret $CLIENT_SECRET
         --force || exit 1
+
 fi
 
-log_level -i "Upgrading kubernetes cluster to version $UPGRADE_VERSION completed.Running E2E test..."
+log_level -i "Upgrading of kubernetes cluster completed.Running E2E test..."
 
 cd $ROOT_PATH
 export CLUSTER_DEFINITION=_output/$APIMODEL_FILE
 export CLEANUP_ON_EXIT=false
 export NAME=$RESOURCE_GROUP
 export CLIENT_ID=$CLIENT_ID
+export CLIENT_SECRET=$CLIENT_SECRET
 export TENANT_ID=$TENANT_ID
 export SUBSCRIPTION_ID=$SUBSCRIPTION_ID
 export TIMEOUT=20m
-export REGION=$REGION
-
-set +e
-make test-kubernetes > upgrade_test_results
-set -e
-
-RESULT=$?
-log_level -i "Result: $RESULT"
-
-#Script returns exit=0 for the failure in the E2E test else throws the deployment error code
-if [ $RESULT -lt 3 ] ; then
-    exit 0
-else
-    exit $RESULT
-fi
+export LOCATION=$REGION
+export API_PROFILE="2018-03-01-hybrid"
+export CUSTOM_CLOUD_CLIENT_ID=$CLIENT_ID
+export CUSTOM_CLOUD_SECRET=$CLIENT_SECRET
+export SERVICE_MANAGEMENT_ENDPOINT=$ENDPOINT_ACTIVE_DIRECTORY_RESOURCEID
+export RESOURCE_MANAGER_ENDPOINT=$TENANT_ENDPOINT
+export ACTIVE_DIRECTORY_ENDPOINT=${ENDPOINT_ACTIVE_DIRECTORY_ENDPOINT}adfs
+export GALLERY_ENDPOINT=$ENDPOINT_GALLERY
+export GRAPH_ENDPOINT=$ENDPOINT_GRAPH_ENDPOINT
+export STORAGE_ENDPOINT_SUFFIX=$SUFFIXES_STORAGE_ENDPOINT
+export KEY_VAULT_DNS_SUFFIX=$SUFFIXES_KEYVAULT_DNS
+export SERVICE_MANAGEMENT_VM_DNS_SUFFIX="cloudapp.net"
+export RESOURCE_MANAGER_VM_DNS_SUFFIX=$FQDN_ENDPOINT_SUFFIX
+export SSH_KEY_NAME="id_rsa"
+export PORTAL_ENDPOINT=$ENDPOINT_PORTAL
 
 
 
