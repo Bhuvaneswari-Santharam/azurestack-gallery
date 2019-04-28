@@ -251,7 +251,7 @@ export SSH_KEY_NAME="id_rsa"
 export PORTAL_ENDPOINT=$ENDPOINT_PORTAL
 
 set +e
-make test-kubernetes
+make test-kubernetes > scale_test_results
 set -e
 
 RESULT=$?
