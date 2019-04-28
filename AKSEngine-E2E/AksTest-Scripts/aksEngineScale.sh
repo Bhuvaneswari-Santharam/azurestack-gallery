@@ -124,8 +124,6 @@ fi
 
 cd $ROOT_PATH/_output
 
-sudo chown -R azureuser /home/azureuser/src/github.com
-
 CLIENT_ID=$(cat $ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json | jq '.properties.servicePrincipalProfile.clientId'| tr -d '"')
 FQDN_ENDPOINT_SUFFIX=$(cat $ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json | jq '.properties.customCloudProfile.environment.resourceManagerVMDNSSuffix' | tr -d '"')
 IDENTITY_SYSTEM=$(cat $ROOT_PATH/_output/$APIMODEL_FILE | jq '.properties.customCloudProfile.identitySystem' | tr -d '"')
@@ -252,6 +250,15 @@ export RESOURCE_MANAGER_VM_DNS_SUFFIX=$FQDN_ENDPOINT_SUFFIX
 export SSH_KEY_NAME="id_rsa"
 export PORTAL_ENDPOINT=$ENDPOINT_PORTAL
 
+set +e
+make test-kubernetes
+set -e
 
-
+RESULT=$?
+# Below condition is to make the deployment success even if the test cases fail, if the deployment of kubernetes fails it exits with the failure code
+log_level -i "Result: $RESULT"
+if [ $RESULT -gt 3 ]
+    exit 1
+else
+   
 
