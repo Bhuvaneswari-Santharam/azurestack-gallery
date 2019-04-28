@@ -70,6 +70,24 @@ check_and_move_azurestack_configuration() {
     sudo mv $1 $2
     log_level -i "Completed creating API model file with given stamp information."
 }
+##
+#   <summary>
+#      Validate if file exist and it has non zero bytes. If validation passes moves file to new location.
+#   </summary>
+#   <param name="1">Source File Name.</param>
+#   <param name="2">Destination File Name.</param>
+#   <returns>None</returns>
+#   <exception>Can exit with error code 1 in case file does not exist or size is zero.</exception>
+#   <remarks>Called within same scripts.</remarks>
+###
+validate_and_restore_cluster_definition()
+{
+    if [ ! -s $1 ]; then
+        log_level -e "Cluster definition file '$1' does not exist or it is empty. An error happened while manipulating its json content."
+        exit 1
+    fi
+    mv $1 $2
+}
 
 ### 
 #   <summary>
