@@ -236,7 +236,7 @@ export GOROOT=/home/azureuser/bin/go
 export PATH=$GOPATH:$GOROOT/bin:$PATH
 
 #####################################################################################
-#Section to install/get AKS-Engine respository.
+#Section to install/get AKS-Engine respository and definition template
 log_level -i "Getting AKS-Engine respository"
 
 # Todo update release branch details: msazurestackworkloads, azsmaster
@@ -245,6 +245,28 @@ retrycmd_if_failure 5 10 git clone https://github.com/$AKSENGINE_REPO -b $AKSENG
 cd aks-engine
 sudo mkdir -p $ROOT_PATH/src/github.com/Azure
 sudo mv $ROOT_PATH/aks-engine $ROOT_PATH/src/github.com/Azure
+
+#Section to get the apimodel file
+log_level -i "Getting api model file"
+
+DEFINITION_TEMPLATE=$ROOT_PATH/src/github.com/Azure/aks-engine/example/azurestack/$AKSENGINE_API_MODEL.json
+
+ if [ ! -f $DEFINITION_TEMPLATE ]; then
+    log_level -e "API model template not found in expected location"
+    log_level -e "Expected location: $DEFINITION_TEMPLATE"
+    exit 1
+fi
+    
+if [ ! -s $DEFINITION_TEMPLATE ]; then
+    log_level -e "Downloaded API model template is an empty file."
+    log_level -e "Template location: $DEFINITION_TEMPLATE"
+    exit 1
+fi
+
+AZURESTACK_CONFIGURATION=$ROOT_PATH/src/github.com/Azure/aks-engine/azurestack.json
+AZURESTACK_CONFIGURATION_TEMP=$ROOT_PATH/src/github.com/Azure/aks-engine/azurestack.tmp
+
+cp $DEFINITION_TEMPLATE $AZURESTACK_CONFIGURATION
 
 #####################################################################################
 #Section to install make
@@ -359,11 +381,54 @@ retrycmd_if_failure 5 10 az cloud set -n $ENVIRONMENT_NAME
 log_level -i "Update cloud profile with value: $HYBRID_PROFILE."
 retrycmd_if_failure 5 10 az cloud update --profile $HYBRID_PROFILE
 
+#####################################################################################
+# apimodel gen
+
+log_level -i "Setting general cluster definition properties."
+
+cat $AZURESTACK_CONFIGURATION | \
+jq --arg ENDPOINT_PORTAL $ENDPOINT_PORTAL '.properties.customCloudProfile.portalUrl = $ENDPOINT_PORTAL'| \
+jq --arg REGION_NAME $REGION_NAME '.location = $REGION_NAME' | \
+jq --arg MASTER_DNS_PREFIX $MASTER_DNS_PREFIX '.properties.masterProfile.dnsPrefix = $MASTER_DNS_PREFIX' | \
+jq '.properties.agentPoolProfiles[0].count'=$AGENT_COUNT | \
+jq --arg AGENT_SIZE $AGENT_SIZE '.properties.agentPoolProfiles[0].vmSize=$AGENT_SIZE' | \
+jq '.properties.masterProfile.count'=$MASTER_COUNT | \
+jq --arg MASTER_SIZE $MASTER_SIZE '.properties.masterProfile.vmSize=$MASTER_SIZE' | \
+jq --arg ADMIN_USERNAME $ADMIN_USERNAME '.properties.linuxProfile.adminUsername = $ADMIN_USERNAME' | \
+jq --arg SSH_PUBLICKEY "${SSH_PUBLICKEY}" '.properties.linuxProfile.ssh.publicKeys[0].keyData = $SSH_PUBLICKEY' \
+> $AZURESTACK_CONFIGURATION_TEMP
+
+validate_and_restore_cluster_definition $AZURESTACK_CONFIGURATION_TEMP $AZURESTACK_CONFIGURATION || exit $ERR_API_MODEL
+
+if [ $IDENTITY_SYSTEM == "ADFS" ]; then
+    log_level -i "Setting ADFS specific cluster definition properties."
+    ADFS="adfs"
+    IDENTITY_SYSTEM_LOWER=$ADFS
+    AUTH_METHOD="client_certificate"
+    cat $AZURESTACK_CONFIGURATION | \
+    jq --arg ADFS $ADFS '.properties.customCloudProfile.identitySystem=$ADFS' | \
+    jq --arg authenticationMethod "client_certificate" '.properties.customCloudProfile.authenticationMethod=$authenticationMethod' | \
+    jq --arg SPN_CLIENT_ID $SPN_CLIENT_ID '.properties.servicePrincipalProfile.clientId = $SPN_CLIENT_ID' | \
+    jq --arg SPN_CLIENT_SECRET_KEYVAULT_ID $SPN_CLIENT_SECRET_KEYVAULT_ID '.properties.servicePrincipalProfile.keyvaultSecretRef.vaultID = $SPN_CLIENT_SECRET_KEYVAULT_ID' | \
+    jq --arg SPN_CLIENT_SECRET_KEYVAULT_SECRET_NAME $SPN_CLIENT_SECRET_KEYVAULT_SECRET_NAME '.properties.servicePrincipalProfile.keyvaultSecretRef.secretName = $SPN_CLIENT_SECRET_KEYVAULT_SECRET_NAME' \
+    > $AZURESTACK_CONFIGURATION_TEMP
+else
+    log_level -i "Setting AAD specific cluster definition properties."
+    cat $AZURESTACK_CONFIGURATION | \
+    jq --arg SPN_CLIENT_ID $SPN_CLIENT_ID '.properties.servicePrincipalProfile.clientId = $SPN_CLIENT_ID' | \
+    jq --arg SPN_CLIENT_SECRET $SPN_CLIENT_SECRET '.properties.servicePrincipalProfile.secret = $SPN_CLIENT_SECRET' \
+    > $AZURESTACK_CONFIGURATION_TEMP
+fi
+
+validate_and_restore_cluster_definition $AZURESTACK_CONFIGURATION_TEMP $AZURESTACK_CONFIGURATION || exit $ERR_API_MODEL
+
+log_level -i "Done building cluster definition."
+
+#####################################################################################
+
 cd $ROOT_PATH/src/github.com/Azure/aks-engine
 
-sudo wget $AKSENGINE_API_MODEL
-
-CLUSTER_DEFN=${AKSENGINE_API_MODEL##*/}
+CLUSTER_DEFN=$AZURESTACK_CONFIGURATION
 
 export CLIENT_ID=$SPN_CLIENT_ID > test_env
 export CLIENT_SECRET=$SPN_CLIENT_SECRET
@@ -438,6 +503,7 @@ RESULT=$?
 
 chown -R azureuser /home/azureuser
 chmod -R u=rwx /home/azureuser
+
 # Below condition is to make the deployment success even if the test cases fail, if the deployment of kubernetes fails it exits with the failure code
 log_level -i "Result: $RESULT"
 if [ $RESULT -gt 3 ]
@@ -445,10 +511,3 @@ if [ $RESULT -gt 3 ]
 else
     exit 0
 fi
-
-
-
-
-
-
-
