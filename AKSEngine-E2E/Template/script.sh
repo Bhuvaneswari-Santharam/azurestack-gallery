@@ -249,7 +249,7 @@ sudo mv $ROOT_PATH/aks-engine $ROOT_PATH/src/github.com/Azure
 #Section to get the apimodel file
 log_level -i "Getting api model file"
 
-DEFINITION_TEMPLATE=$ROOT_PATH/src/github.com/Azure/aks-engine/example/azurestack/$AKSENGINE_API_MODEL.json
+DEFINITION_TEMPLATE=$ROOT_PATH/src/github.com/Azure/aks-engine/examples/azurestack/$AKSENGINE_API_MODEL.json
 
  if [ ! -f $DEFINITION_TEMPLATE ]; then
     log_level -e "API model template not found in expected location"
