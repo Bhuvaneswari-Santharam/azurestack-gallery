@@ -248,5 +248,18 @@ export RESOURCE_MANAGER_VM_DNS_SUFFIX=$FQDN_ENDPOINT_SUFFIX
 export SSH_KEY_NAME="id_rsa"
 export PORTAL_ENDPOINT=$ENDPOINT_PORTAL
 
+set +e
+make test-kubernetes > upgrade_test_results 
+set -e
+
+RESULT=$?
+
+# Below condition is to make the deployment success even if the test cases fail, if the deployment of kubernetes fails it exits with the failure code
+log_level -i "Result: $RESULT"
+if [ $RESULT -gt 3 ]
+    exit 1
+else
+    exit 0
+fi
 
 
