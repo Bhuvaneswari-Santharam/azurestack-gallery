@@ -446,7 +446,7 @@ log_level -i "Done building cluster definition."
 
 cd $ROOT_PATH/src/github.com/Azure/aks-engine
 
-CLUSTER_DEFN=$AZURESTACK_CONFIGURATION
+CLUSTER_DEFN=azurestack.json
 
 export CLIENT_ID=$SPN_CLIENT_ID > test_env
 export CLIENT_SECRET=$SPN_CLIENT_SECRET
