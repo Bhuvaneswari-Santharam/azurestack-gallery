@@ -240,7 +240,6 @@ export CUSTOM_CLOUD_CLIENT_ID=$CLIENT_ID
 export CUSTOM_CLOUD_SECRET=$CLIENT_SECRET
 export SERVICE_MANAGEMENT_ENDPOINT=$ENDPOINT_ACTIVE_DIRECTORY_RESOURCEID
 export RESOURCE_MANAGER_ENDPOINT=$TENANT_ENDPOINT
-export ACTIVE_DIRECTORY_ENDPOINT=${ENDPOINT_ACTIVE_DIRECTORY_ENDPOINT}adfs
 export GALLERY_ENDPOINT=$ENDPOINT_GALLERY
 export GRAPH_ENDPOINT=$ENDPOINT_GRAPH_ENDPOINT
 export STORAGE_ENDPOINT_SUFFIX=$SUFFIXES_STORAGE_ENDPOINT
@@ -249,6 +248,11 @@ export SERVICE_MANAGEMENT_VM_DNS_SUFFIX="cloudapp.net"
 export RESOURCE_MANAGER_VM_DNS_SUFFIX=$FQDN_ENDPOINT_SUFFIX
 export SSH_KEY_NAME="id_rsa"
 export PORTAL_ENDPOINT=$ENDPOINT_PORTAL
+if [ $IDENTITY_SYSTEM == "adfs" ] ; then
+    export ACTIVE_DIRECTORY_ENDPOINT=${ENDPOINT_ACTIVE_DIRECTORY_ENDPOINT}adfs
+else
+    export ACTIVE_DIRECTORY_ENDPOINT=$ENDPOINT_ACTIVE_DIRECTORY_ENDPOINT
+fi
 
 #####################################################################################
 #Section to install Go.
@@ -289,7 +293,7 @@ export PATH=$GOPATH/bin:$PATH
 
 cd $ROOT_PATH
 make bootstrap
-make validate-dependencies
+
 set +e
 make test-kubernetes > scale_test_results
 set -e
@@ -297,7 +301,7 @@ set -e
 RESULT=$?
 # Below condition is to make the deployment success even if the test cases fail, if the deployment of kubernetes fails it exits with the failure code
 log_level -i "Result: $RESULT"
-if [ $RESULT -gt 3 ]
+if [ $RESULT -gt 3 ] ; then
     exit 1
 else
    
