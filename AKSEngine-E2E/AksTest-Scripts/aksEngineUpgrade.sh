@@ -238,7 +238,6 @@ export CUSTOM_CLOUD_CLIENT_ID=$CLIENT_ID
 export CUSTOM_CLOUD_SECRET=$CLIENT_SECRET
 export SERVICE_MANAGEMENT_ENDPOINT=$ENDPOINT_ACTIVE_DIRECTORY_RESOURCEID
 export RESOURCE_MANAGER_ENDPOINT=$TENANT_ENDPOINT
-export ACTIVE_DIRECTORY_ENDPOINT=${ENDPOINT_ACTIVE_DIRECTORY_ENDPOINT}adfs
 export GALLERY_ENDPOINT=$ENDPOINT_GALLERY
 export GRAPH_ENDPOINT=$ENDPOINT_GRAPH_ENDPOINT
 export STORAGE_ENDPOINT_SUFFIX=$SUFFIXES_STORAGE_ENDPOINT
@@ -248,6 +247,52 @@ export RESOURCE_MANAGER_VM_DNS_SUFFIX=$FQDN_ENDPOINT_SUFFIX
 export SSH_KEY_NAME="id_rsa"
 export PORTAL_ENDPOINT=$ENDPOINT_PORTAL
 
+if [ $IDENTITY_SYSTEM == "adfs" ] ; then
+    export ACTIVE_DIRECTORY_ENDPOINT=${ENDPOINT_ACTIVE_DIRECTORY_ENDPOINT}adfs
+else
+    export ACTIVE_DIRECTORY_ENDPOINT=$ENDPOINT_ACTIVE_DIRECTORY_ENDPOINT
+fi
+
+#####################################################################################
+#Section to install Go.
+
+cd /home/azureuser
+
+sudo apt install gcc make -y
+
+# Set the environment variables
+export GOPATH=/home/azureuser
+export GOROOT=/home/azureuser/bin/go
+export PATH=$GOPATH:$GOROOT/bin:$PATH
+
+#####################################################################################
+
+#Section to install kubectl
+KUBECTL_VERSION=1.11.7
+
+echo "==> Downloading kubectl version ${KUBECTL_VERSION} <=="
+
+sudo curl -L https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl
+
+sudo chmod +x /usr/local/bin/kubectl
+
+sudo cp /usr/local/bin/kubectl /usr/local/bin/k
+
+export PATH=/usr/local/bin:$PATH
+
+
+#####################################################################################
+# Section to install golang-dep
+
+sudo curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+
+export PATH=$GOPATH/bin:$PATH
+
+#####################################################################################
+
+cd $ROOT_PATH
+make bootstrap
+
 set +e
 make test-kubernetes > upgrade_test_results 
 set -e
@@ -256,7 +301,7 @@ RESULT=$?
 
 # Below condition is to make the deployment success even if the test cases fail, if the deployment of kubernetes fails it exits with the failure code
 log_level -i "Result: $RESULT"
-if [ $RESULT -gt 3 ]
+if [ $RESULT -gt 3 ] ; then
     exit 1
 else
     exit 0
