@@ -213,7 +213,7 @@ else
         --api-model $OUTPUT \
         --location $REGION \
         --resource-group $RESOURCE_GROUP  \
-        --master-FQDN $FQDN_ENDPOINT_SUFFIX
+        --master-FQDN $FQDN_ENDPOINT_SUFFIX \
         --node-pool $AGENT_POOL \
         --new-node-count $NODE_COUNT \
         --auth-method $AUTH_METHOD \
