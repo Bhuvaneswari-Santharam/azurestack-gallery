@@ -253,9 +253,7 @@ export PORTAL_ENDPOINT=$ENDPOINT_PORTAL
 #####################################################################################
 #Section to install Go.
 
-cd /home/azureuser/bin
-sudo wget https://dl.google.com/go/go1.11.4.linux-amd64.tar.gz
-sudo tar -C  home/azureuser/bin -xzf go1.11.4.linux-amd64.tar.gz
+cd /home/azureuser
 
 sudo apt install gcc make -y
 
