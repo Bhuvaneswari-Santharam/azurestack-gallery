@@ -255,7 +255,7 @@ export PORTAL_ENDPOINT=$ENDPOINT_PORTAL
 
 cd /home/azureuser
 sudo wget https://dl.google.com/go/go1.11.4.linux-amd64.tar.gz
-sudo tar -C  $ROOT_PATH/bin -xzf go1.11.4.linux-amd64.tar.gz
+sudo tar -C  home/azureuser/bin -xzf go1.11.4.linux-amd64.tar.gz
 
 sudo apt install gcc make -y
 
@@ -289,7 +289,7 @@ export PATH=$GOPATH/bin:$PATH
 
 #####################################################################################
 
-
+cd $ROOT_PATH
 make bootstrap
 make validate-dependencies
 set +e
