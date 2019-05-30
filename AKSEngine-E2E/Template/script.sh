@@ -269,6 +269,7 @@ SUFFIXES_STORAGE_ENDPOINT=$REGION_NAME.$EXTERNAL_FQDN
 SUFFIXES_KEYVAULT_DNS=.vault.$REGION_NAME.$EXTERNAL_FQDN
 FQDN_ENDPOINT_SUFFIX=cloudapp.$EXTERNAL_FQDN
 ENVIRONMENT_NAME=AzureStackCloud
+AUTHENTICATION_METHOD=client_secret
 
 
 log_level -i "EXTERNAL_FQDN is:$EXTERNAL_FQDN"
@@ -365,7 +366,7 @@ jq '.properties.masterProfile.count'=$MASTER_COUNT | \
 jq --arg MASTER_SIZE $MASTER_SIZE '.properties.masterProfile.vmSize=$MASTER_SIZE' | \
 jq --arg ADMIN_USERNAME $ADMIN_USERNAME '.properties.linuxProfile.adminUsername = $ADMIN_USERNAME' | \
 jq --arg SSH_PUBLICKEY "${SSH_PUBLICKEY}" '.properties.linuxProfile.ssh.publicKeys[0].keyData = $SSH_PUBLICKEY' | \
-jq --arg authenticationMethod "client_secret" '.properties.customCloudProfile.authenticationMethod=$authenticationMethod' | \
+jq --arg AUTHENTICATION_METHOD $AUTHENTICATION_METHOD '.properties.customCloudProfile.authenticationMethod = $AUTHENTICATION_METHOD' | \
 jq --arg SPN_CLIENT_ID $SPN_CLIENT_ID '.properties.servicePrincipalProfile.clientId = $SPN_CLIENT_ID' | \
 jq --arg SPN_CLIENT_SECRET $SPN_CLIENT_SECRET '.properties.servicePrincipalProfile.secret = $SPN_CLIENT_SECRET' \
 > $AZURESTACK_CONFIGURATION_TEMP
