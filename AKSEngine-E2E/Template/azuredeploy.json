@@ -68,20 +68,6 @@
       },
       "type": "securestring"
     },
-    "servicePrincipalCertificateKeyVaultId": {
-      "defaultValue": "servicePrincipalCertificateKeyVaultId",
-      "metadata": {
-        "description": "the service Principal Certificate KeyVault Id"
-      },
-      "type": "string"
-    },
-    "servicePrincipalCertificateKeyVaultSecretName": {
-      "defaultValue": "servicePrincipalCertificateKeyVaultSecretName",
-      "metadata": {
-        "description": "The service Principal Certificate KeyVault SecretName"
-      },
-      "type": "string"
-    },
     "identitySystem": {
       "defaultValue": "AzureAD",
       "allowedValues": [
