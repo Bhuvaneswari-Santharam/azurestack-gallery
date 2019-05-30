@@ -12,26 +12,8 @@
       }
     },
     "customCloudProfile": {
-      "environment": {
-          "name": "AzureStackCloud",
-          "managementPortalURL": "",
-          "publishSettingsURL": "",
-          "serviceManagementEndpoint": "serviceManagementEndpoint",
-          "resourceManagerEndpoint": "resourceManagerEndpoint",
-          "activeDirectoryEndpoint": "activeDirectoryEndpoint",
-          "galleryEndpoint": "galleryEndpoint",
-          "keyVaultEndpoint": "",
-          "graphEndpoint": "graphEndpoint",
-          "storageEndpointSuffix": "storageEndpointSuffix",
-          "sqlDatabaseDNSSuffix": "",
-          "trafficManagerDNSSuffix": "",
-          "keyVaultDNSSuffix": "keyVaultDNSSuffix",
-          "serviceBusEndpointSuffix": "",
-          "serviceManagementVMDNSSuffix": "serviceManagementVMDNSSuffix",
-          "resourceManagerVMDNSSuffix": "resourceManagerVMDNSSuffix",
-          "containerRegistryDNSSuffix": ""
-      }
-  },
+       "portalURL": ""
+    },
     "masterProfile": {
       "count": 1,
       "dnsPrefix": "",
