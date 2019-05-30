@@ -12,7 +12,7 @@
             }
         },
         "customCloudProfile":{
-            "identitySystem": "azure_ad",
+            "identitySystem": "",
             "authenticationMethod": "client_secret",
             "portalURL":""
         },
