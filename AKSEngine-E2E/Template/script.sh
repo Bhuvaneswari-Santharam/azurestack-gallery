@@ -91,38 +91,6 @@ validate_and_restore_cluster_definition()
 
 ### 
 #   <summary>
-#      Create PEM file based on given secret.
-#   </summary>
-#   <param name="1">Service principle secret.</param>
-#   <param name="2">Certificate PFX file name.</param>
-#   <param name="3">Certificate PEM file name.</param>
-#   <returns>None</returns>
-#   <exception>None</exception>
-#   <remarks>Called within same scripts.</remarks>
-###
-convert_to_cert() {
-
-    log_level -i "Decoding secret to json."
-    echo $1 | base64 --decode > cert.json
-       
-    log_level -i "Saving data value to $2."       
-    cat cert.json | jq '.data' | tr -d \" | base64 --decode > $2
-       
-    log_level -i "Extracting the password."
-    PASSWORD=$(cat cert.json | jq '.password' | tr -d \")
-
-    log_level -i "Converting data into pem format."
-    openssl pkcs12 -in $2 -nodes -passin pass:$PASSWORD -out $3
-
-    log_level -i "Converting to certificate"
-    openssl pkcs12 -in $2 -clcerts -nokeys -out $4 -passin pass:$PASSWORD
-
-    log_level -i "Converting into key"
-    openssl pkcs12 -in $2 -nocerts -nodes  -out $5 -passin pass:$PASSWORD
-}
-
-### 
-#   <summary>
 #       Copying AzureStack root certificate to appropriate store.
 #   </summary>
 #   <returns>None</returns>
@@ -347,15 +315,6 @@ if [ $IDENTITY_SYSTEM == "ADFS" ] ; then
     log_level -i "In ADFS section to get(Active_Directory_Endpoint, SPN_CLIENT_SECRET) configurations."
     ENDPOINT_ACTIVE_DIRECTORY_ENDPOINT=`echo $METADATA  | jq '.authentication.loginEndpoint' | tr -d \" | sed -e 's/adfs*$//' | tr -d \" `
     log_level -i "Active directory endpoint is: $ENDPOINT_ACTIVE_DIRECTORY_ENDPOINT"
-       
-    # Parse SPN_CLIENT_SECRET to get pfx and password and generate pem using PFX
-    log_level -i "Parsing secret to get pem and pfx for ADFS scenario."
-    CERTIFICATE_PFX_LOCATION="spnauth.pfx"
-    CERTIFICATE_PEM_LOCATION="spnauth.pem"
-    KEY_LOCATION="spnauth.key"
-    CERTIFICATE_LOCATION="spnauth.crt"
-    convert_to_cert $SPN_CLIENT_SECRET $CERTIFICATE_PFX_LOCATION $CERTIFICATE_PEM_LOCATION $CERTIFICATE_LOCATION $KEY_LOCATION 
-    log_level -i "Able to get PFX value in : '$CERTIFICATE_PFX_LOCATION'  and pem value in '$CERTIFICATE_PEM_LOCATION'."
 
     log_level -i "Append adfs back to Active directory endpoint as it is required in Azure CLI to register and login."
     ENDPOINT_ACTIVE_DIRECTORY_ENDPOINT=${ENDPOINT_ACTIVE_DIRECTORY_ENDPOINT}adfs
@@ -372,21 +331,13 @@ IDENTITY_SYSTEM_LOWER=`echo "$IDENTITY_SYSTEM" | tr '[:upper:]' '[:lower:]'`
 
 if [ $IDENTITY_SYSTEM == "ADFS" ] ; then
     log_level -i "In ADFS section to update (servicePrincipalProfile, authenticationMethod ) configurations."
-    export VAULT_ID=$SPN_CLIENT_SECRET_KEYVAULT_ID
-    export SECRET_NAME=$SPN_CLIENT_SECRET_KEYVAULT_SECRET_NAME
-    export AUTHENTICATION_METHOD="client_certificate"
-    export SPN_CLIENT_SECRET=$CERTIFICATE_PEM_LOCATION
     export IDENTITY_SYSTEM="adfs"
 else
     log_level -i "In AAD section to update (servicePrincipalProfile ) configurations."
-    export AUTHENTICATION_METHOD="client_secret"
-    export VAULT_ID="local"
-    export SECRET_NAME="local"
-    export CUSTOM_CLOUD_SECRET=$SPN_CLIENT_SECRET
     export IDENTITY_SYSTEM="azure_ad"
 fi
 
-export CUSTOM_CLOUD_CLIENT_ID=$SPN_CLIENT_ID
+
 
 #####################################################################################
 # Section to generate ARM template using AKS Engine, login using Azure CLI and deploy the template.
@@ -413,7 +364,10 @@ jq --arg AGENT_SIZE $AGENT_SIZE '.properties.agentPoolProfiles[0].vmSize=$AGENT_
 jq '.properties.masterProfile.count'=$MASTER_COUNT | \
 jq --arg MASTER_SIZE $MASTER_SIZE '.properties.masterProfile.vmSize=$MASTER_SIZE' | \
 jq --arg ADMIN_USERNAME $ADMIN_USERNAME '.properties.linuxProfile.adminUsername = $ADMIN_USERNAME' | \
-jq --arg SSH_PUBLICKEY "${SSH_PUBLICKEY}" '.properties.linuxProfile.ssh.publicKeys[0].keyData = $SSH_PUBLICKEY' \
+jq --arg SSH_PUBLICKEY "${SSH_PUBLICKEY}" '.properties.linuxProfile.ssh.publicKeys[0].keyData = $SSH_PUBLICKEY' | \
+jq --arg authenticationMethod "client_secret" '.properties.customCloudProfile.authenticationMethod=$authenticationMethod' | \
+jq --arg SPN_CLIENT_ID $SPN_CLIENT_ID '.properties.servicePrincipalProfile.clientId = $SPN_CLIENT_ID' | \
+jq --arg SPN_CLIENT_SECRET $SPN_CLIENT_SECRET '.properties.servicePrincipalProfile.secret = $SPN_CLIENT_SECRET' \
 > $AZURESTACK_CONFIGURATION_TEMP
 
 validate_and_restore_cluster_definition $AZURESTACK_CONFIGURATION_TEMP $AZURESTACK_CONFIGURATION || exit $ERR_API_MODEL
@@ -422,19 +376,8 @@ if [ $IDENTITY_SYSTEM == "ADFS" ]; then
     log_level -i "Setting ADFS specific cluster definition properties."
     ADFS="adfs"
     IDENTITY_SYSTEM_LOWER=$ADFS
-    AUTH_METHOD="client_certificate"
     cat $AZURESTACK_CONFIGURATION | \
     jq --arg ADFS $ADFS '.properties.customCloudProfile.identitySystem=$ADFS' | \
-    jq --arg authenticationMethod "client_certificate" '.properties.customCloudProfile.authenticationMethod=$authenticationMethod' | \
-    jq --arg SPN_CLIENT_ID $SPN_CLIENT_ID '.properties.servicePrincipalProfile.clientId = $SPN_CLIENT_ID' | \
-    jq --arg SPN_CLIENT_SECRET_KEYVAULT_ID $SPN_CLIENT_SECRET_KEYVAULT_ID '.properties.servicePrincipalProfile.keyvaultSecretRef.vaultID = $SPN_CLIENT_SECRET_KEYVAULT_ID' | \
-    jq --arg SPN_CLIENT_SECRET_KEYVAULT_SECRET_NAME $SPN_CLIENT_SECRET_KEYVAULT_SECRET_NAME '.properties.servicePrincipalProfile.keyvaultSecretRef.secretName = $SPN_CLIENT_SECRET_KEYVAULT_SECRET_NAME' \
-    > $AZURESTACK_CONFIGURATION_TEMP
-else
-    log_level -i "Setting AAD specific cluster definition properties."
-    cat $AZURESTACK_CONFIGURATION | \
-    jq --arg SPN_CLIENT_ID $SPN_CLIENT_ID '.properties.servicePrincipalProfile.clientId = $SPN_CLIENT_ID' | \
-    jq --arg SPN_CLIENT_SECRET $SPN_CLIENT_SECRET '.properties.servicePrincipalProfile.secret = $SPN_CLIENT_SECRET' \
     > $AZURESTACK_CONFIGURATION_TEMP
 fi
 
@@ -448,7 +391,10 @@ cd $ROOT_PATH/src/github.com/Azure/aks-engine
 
 CLUSTER_DEFN=azurestack.json
 
-export CLIENT_ID=$SPN_CLIENT_ID > test_env
+export CUSTOM_CLOUD_CLIENT_ID=$SPN_CLIENT_ID
+export AUTHENTICATION_METHOD="client_secret"
+export CUSTOM_CLOUD_SECRET=$SPN_CLIENT_SECRET
+export CLIENT_ID=$SPN_CLIENT_ID 
 export CLIENT_SECRET=$SPN_CLIENT_SECRET
 export TENANT_ID=$TENANT_ID
 export SUBSCRIPTION_ID=$TENANT_SUBSCRIPTION_ID
@@ -483,34 +429,31 @@ fi
 
 log_level -i "------------------------------------------------------------------------"
 log_level -i "Environment parameter details:"
+log_level -i "ACTIVE_DIRECTORY_ENDPOINT : $ACTIVE_DIRECTORY_ENDPOINT"
 log_level -i "API_PROFILE: $API_PROFILE"
+log_level -i "AUTHENTICATION_METHOD: $AUTHENTICATION_METHOD"
+log_level -i "CLEANUP_ON_EXIT: $CLEANUP_ON_EXIT"
 log_level -i "CLIENT_ID: $CLIENT_ID"
 log_level -i "CLIENT_SECRET :$CLIENT_SECRET"
-log_level -i "TENANT_ID: $TENANT_ID"
-log_level -i "SUBSCRIPTION_ID: $SUBSCRIPTION_ID"
-log_level -i "CLEANUP_ON_EXIT: $CLEANUP_ON_EXIT"
-log_level -i "LOCATION: $LOCATION"
-log_level -i "RESOURCE_MANAGER_ENDPOINT : $RESOURCE_MANAGER_ENDPOINT"
-log_level -i "ACTIVE_DIRECTORY_ENDPOINT : $ACTIVE_DIRECTORY_ENDPOINT"
-log_level -i "GALLERY_ENDPOINT: $GALLERY_ENDPOINT"
-log_level -i "GRAPH_ENDPOINT: $GRAPH_ENDPOINT"
-log_level -i "STORAGE_ENDPOINT_SUFFIX: $STORAGE_ENDPOINT_SUFFIX"
-log_level -i "KEY_VAULT_DNS_SUFFIX: $KEY_VAULT_DNS_SUFFIX"
-log_level -i "SERVICE_MANAGEMENT_VM_DNS_SUFFIX: $SERVICE_MANAGEMENT_VM_DNS_SUFFIX"
-log_level -i "RESOURCE_MANAGER_VM_DNS_SUFFIX: $RESOURCE_MANAGER_VM_DNS_SUFFIX"
-log_level -i "SSH_KEY_NAME: $SSH_KEY_NAME"
-log_level -i "IDENTITY_SYSTEM: $IDENTITY_SYSTEM" 
-log_level -i "AUTHENTICATION_METHOD: $AUTHENTICATION_METHOD"
-log_level -i "VAULT_ID: $VAULT_ID"
-log_level -i "SECRET_NAME: $SECRET_NAME"
+log_level -i "CLUSTER_DEFINITION $CLUSTER_DEFINITION"
 log_level -i "CUSTOM_CLOUD_CLIENT_ID: $CUSTOM_CLOUD_CLIENT_ID"
 log_level -i "CUSTOM_CLOUD_SECRET: $CUSTOM_CLOUD_SECRET"
-log_level -i "CLUSTER_DEFINITION $CLUSTER_DEFINITION"
-log_level -i "SERVICE_MANAGEMENT_ENDPOINT: $SERVICE_MANAGEMENT_ENDPOINT"
+log_level -i "GALLERY_ENDPOINT: $GALLERY_ENDPOINT"
+log_level -i "GRAPH_ENDPOINT: $GRAPH_ENDPOINT"
+log_level -i "KEY_VAULT_DNS_SUFFIX: $KEY_VAULT_DNS_SUFFIX"
+log_level -i "IDENTITY_SYSTEM: $IDENTITY_SYSTEM" 
+log_level -i "LOCATION: $LOCATION"
+log_level -i "PORTAL_ENDPOINT: $ENDPOINT_PORTAL"
 log_level -i "REGION_NAME: $REGION_NAME"
 log_level -i "RESOURCE_GROUP_NAME: $RESOURCE_GROUP_NAME"
+log_level -i "RESOURCE_MANAGER_ENDPOINT : $RESOURCE_MANAGER_ENDPOINT"
+log_level -i "RESOURCE_MANAGER_VM_DNS_SUFFIX: $RESOURCE_MANAGER_VM_DNS_SUFFIX"
+log_level -i "SERVICE_MANAGEMENT_ENDPOINT: $SERVICE_MANAGEMENT_ENDPOINT"
+log_level -i "SERVICE_MANAGEMENT_VM_DNS_SUFFIX: $SERVICE_MANAGEMENT_VM_DNS_SUFFIX"
+log_level -i "SSH_KEY_NAME: $SSH_KEY_NAME"
+log_level -i "STORAGE_ENDPOINT_SUFFIX: $STORAGE_ENDPOINT_SUFFIX"
+log_level -i "SUBSCRIPTION_ID: $SUBSCRIPTION_ID"
 log_level -i "TENANT_ID: $TENANT_ID"
-log_level -i "PORTAL_ENDPOINT: $ENDPOINT_PORTAL"
 log_level -i "------------------------------------------------------------------------"
 
 set +e
