@@ -357,7 +357,7 @@ retrycmd_if_failure 5 10 az cloud update --profile $HYBRID_PROFILE
 log_level -i "Setting general cluster definition properties."
 
 cat $AZURESTACK_CONFIGURATION | \
-jq --arg ENDPOINT_PORTAL $ENDPOINT_PORTAL '.properties.customCloudProfile.portalUrl = $ENDPOINT_PORTAL'| \
+jq --arg ENDPOINT_PORTAL $ENDPOINT_PORTAL '.properties.customCloudProfile.portalURL = $ENDPOINT_PORTAL'| \
 jq --arg REGION_NAME $REGION_NAME '.location = $REGION_NAME' | \
 jq --arg MASTER_DNS_PREFIX $MASTER_DNS_PREFIX '.properties.masterProfile.dnsPrefix = $MASTER_DNS_PREFIX' | \
 jq '.properties.agentPoolProfiles[0].count'=$AGENT_COUNT | \
