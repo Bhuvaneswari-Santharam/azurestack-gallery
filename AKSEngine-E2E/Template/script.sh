@@ -330,16 +330,6 @@ fi
 IDENTITY_SYSTEM_LOWER=`echo "$IDENTITY_SYSTEM" | tr '[:upper:]' '[:lower:]'`
 
 
-if [ $IDENTITY_SYSTEM == "ADFS" ] ; then
-    log_level -i "In ADFS section to update (servicePrincipalProfile, authenticationMethod ) configurations."
-    export IDENTITY_SYSTEM="adfs"
-else
-    log_level -i "In AAD section to update (servicePrincipalProfile ) configurations."
-    export IDENTITY_SYSTEM="azure_ad"
-fi
-
-
-
 #####################################################################################
 # Section to generate ARM template using AKS Engine, login using Azure CLI and deploy the template.
 # https://docs.microsoft.com/en-us/azure/azure-stack/user/azure-stack-version-profiles-azurecli2#connect-to-azure-stack
@@ -380,11 +370,19 @@ if [ $IDENTITY_SYSTEM == "ADFS" ]; then
     cat $AZURESTACK_CONFIGURATION | \
     jq --arg ADFS $ADFS '.properties.customCloudProfile.identitySystem=$ADFS' \
     > $AZURESTACK_CONFIGURATION_TEMP
+
+    validate_and_restore_cluster_definition $AZURESTACK_CONFIGURATION_TEMP $AZURESTACK_CONFIGURATION || exit $ERR_API_MODEL
 fi
 
-validate_and_restore_cluster_definition $AZURESTACK_CONFIGURATION_TEMP $AZURESTACK_CONFIGURATION || exit $ERR_API_MODEL
-
 log_level -i "Done building cluster definition."
+
+if [ $IDENTITY_SYSTEM == "ADFS" ] ; then
+    log_level -i "In ADFS section to update (servicePrincipalProfile, authenticationMethod ) configurations."
+    export IDENTITY_SYSTEM="adfs"
+else
+    log_level -i "In AAD section to update (servicePrincipalProfile ) configurations."
+    export IDENTITY_SYSTEM="azure_ad"
+fi
 
 #####################################################################################
 
