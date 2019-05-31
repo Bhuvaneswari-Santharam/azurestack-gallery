@@ -378,7 +378,7 @@ if [ $IDENTITY_SYSTEM == "ADFS" ]; then
     ADFS="adfs"
     IDENTITY_SYSTEM_LOWER=$ADFS
     cat $AZURESTACK_CONFIGURATION | \
-    jq --arg ADFS $ADFS '.properties.customCloudProfile.identitySystem=$ADFS' | \
+    jq --arg ADFS $ADFS '.properties.customCloudProfile.identitySystem=$ADFS' \
     > $AZURESTACK_CONFIGURATION_TEMP
 fi
 
