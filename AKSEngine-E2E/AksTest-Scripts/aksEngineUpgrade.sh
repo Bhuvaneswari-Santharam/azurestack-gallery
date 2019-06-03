@@ -164,49 +164,16 @@ echo "UPGRADE_VERSION:$UPGRADE_VERSION"
 
 cd $ROOT_PATH
 
-if [ $IDENTITY_SYSTEM == "adfs" ] ; then
-    CLIENT_SECRET=$ROOT_PATH/spnauth.pem
-   
-    KEY_LOCATION=$ROOT_PATH/spnauth.key
-    CERT_LOCATION=$ROOT_PATH/spnauth.crt
 
-    if [ ! -f $KEY_LOCATION ] ; then
-        log_level -i "Private Key not found.Upgrade can not be performed"
-    fi
+CLIENT_SECRET=$(cat $ROOT_PATH/_output/$APIMODEL_FILE | jq '.properties.servicePrincipalProfile.secret' | tr -d '"')
+export CLIENT_SECRET=$CLIENT_SECRET
 
-    if [ ! -f $CERT_LOCATION ] ; then
-        log_level -i "Certificate not found.Upgrade can not be performed"
-    fi
-
-    VAULT_ID=$(cat $ROOT_PATH/_output/$APIMODEL_FILE | jq '.properties.servicePrincipalProfile.keyvaultSecretRef.vaultID' | tr -d '"')
-    SECRET_NAME=$(cat $ROOT_PATH/_output/$APIMODEL_FILE | jq '.properties.servicePrincipalProfile.keyvaultSecretRef.secretName' | tr -d '"')
-    export VAULT_ID=$VAULT_ID
-    export SECRET_NAME=$SECRET_NAME
+if [ $CLIENT_SECRET == "" ] ; then
+   log_level -i "Client Secret not found.Upgrade can not be performed"
+    exit 1
+fi
     
-       ./bin/aks-engine upgrade \
-        --azure-env $AZURE_ENV \
-        --subscription-id $SUBSCRIPTION_ID \
-        --api-model $OUTPUT \
-        --location $REGION \
-        --resource-group $RESOURCE_GROUP  \
-        --auth-method $AUTH_METHOD \
-        --client-id $CLIENT_ID \
-        --private-key-path $KEY_LOCATION \
-        --certificate-path $CERT_LOCATION \
-        --upgrade-version $UPGRADE_VERSION \
-        --identity-system $IDENTITY_SYSTEM \
-        --force || exit 1
-
-else
-    CLIENT_SECRET=$(cat $ROOT_PATH/_output/$APIMODEL_FILE | jq '.properties.servicePrincipalProfile.secret' | tr -d '"')
-    export CLIENT_SECRET=$CLIENT_SECRET
-
-    if [ $CLIENT_SECRET == "" ] ; then
-        log_level -i "Client Secret not found.Upgrade can not be performed"
-        exit 1
-    fi
-    
-       ./bin/aks-engine upgrade \
+./bin/aks-engine upgrade \
         --azure-env $AZURE_ENV \
         --subscription-id $SUBSCRIPTION_ID \
         --api-model $OUTPUT \
@@ -219,7 +186,6 @@ else
         --identity-system $IDENTITY_SYSTEM \
         --force || exit 1
 
-fi
 
 log_level -i "Upgrading of kubernetes cluster completed.Running E2E test..."
 
