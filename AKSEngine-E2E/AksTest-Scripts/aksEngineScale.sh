@@ -258,7 +258,7 @@ export PATH=$GOPATH/bin:$PATH
 
 cd $ROOT_PATH
 make bootstrap
-
+eval `ssh-agent`
 set +e
 make test-kubernetes > scale_test_results
 set -e
