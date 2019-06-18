@@ -222,6 +222,7 @@ fi
 if [ $NODE_COUNT -gt 1 ] ; then
     export GINKGO_SKIP="should have have the appropriate node count|should have node labels and annotations"
 fi
+export GINKGO_SKIP="should have have the appropriate node count|should have node labels and annotations"
 
 #####################################################################################
 #Section to install Go.
