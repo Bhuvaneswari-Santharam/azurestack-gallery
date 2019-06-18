@@ -219,6 +219,10 @@ else
     export ACTIVE_DIRECTORY_ENDPOINT=$ENDPOINT_ACTIVE_DIRECTORY_ENDPOINT
 fi
 
+if [ $NODE_COUNT -gt 1 ]
+    export GINKGO_SKIP="should have have the appropriate node count|should have node labels and annotations"
+fi
+
 #####################################################################################
 #Section to install Go.
 
