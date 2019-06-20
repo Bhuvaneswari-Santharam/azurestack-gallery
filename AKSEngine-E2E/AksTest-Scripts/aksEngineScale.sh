@@ -137,7 +137,7 @@ SUFFIXES_STORAGE_ENDPOINT=$(cat $ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json
 SUFFIXES_KEYVAULT_DNS=$(cat $ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json | jq '.properties.customCloudProfile.environment.keyVaultDNSSuffix' | tr -d '"')
 ENDPOINT_PORTAL=$(cat $ROOT_PATH/_output/$RESOURCE_GROUP/apimodel.json | jq '.properties.customCloudProfile.portalURL' | tr -d '"')
 AZURE_ENV="AzureStackCloud"
-MASTER-FQDN=$RESOURCE_GROUP.$REGION.$FQDN_ENDPOINT_SUFFIX
+MASTER_FQDN=$RESOURCE_GROUP.$REGION.$FQDN_ENDPOINT_SUFFIX
 echo $TENANT_ENDPOINT
 echo "CLIENT_ID: $CLIENT_ID"
 
@@ -180,7 +180,7 @@ fi
         --api-model $OUTPUT \
         --location $REGION \
         --resource-group $RESOURCE_GROUP  \
-        --master-FQDN $MASTER-FQDN \
+        --master-FQDN $MASTER_FQDN \
         --node-pool $AGENT_POOL \
         --new-node-count $NODE_COUNT \
         --auth-method $AUTH_METHOD \
