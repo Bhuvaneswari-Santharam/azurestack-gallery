@@ -257,6 +257,8 @@ export PATH=$GOPATH/bin:$PATH
 
 #####################################################################################
 
+sudo rm ~/.ssh/known_hosts
+
 cd $ROOT_PATH
 make bootstrap
 eval `ssh-agent`
