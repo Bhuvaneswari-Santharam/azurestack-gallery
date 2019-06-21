@@ -221,7 +221,7 @@ else
 fi
 
 if [ $NODE_COUNT -gt 1 ] ; then
-    export GINKGO_SKIP="should have have the appropriate node count|should have node labels and annotations"
+    export GINKGO_SKIP="should have have the appropriate node count|should have node labels and annotations|should be able to produce working LoadBalancers"
 fi
 
 #####################################################################################
