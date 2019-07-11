@@ -77,6 +77,10 @@ do
             PARAMETER="$2"
             shift 2
         ;;
+        -o|--operation)
+            OPERATION="$2"
+            shift 2
+        ;;
         -h|--help)
             printUsage
         ;;
@@ -117,6 +121,13 @@ then
     printusuage
 fi
 
+if [ -z "$OPERATION" ]
+then
+    echo ""
+    echo "[ERR] --operation should be provided"
+    printusuage
+fi
+
 if [ ! -f $IDENTITYFILE ]
 then
     echo ""
@@ -137,6 +148,7 @@ echo "tenant-id:        $TENANT_ID"
 echo "subscription-id:  $SUBSCRIPTION_ID"
 echo "file:             $FILE"
 echo "parameter:        $PARAMETER"
+echo "operation:        $OPERATION"
 echo ""
 
 
@@ -165,11 +177,11 @@ download_scripts $FILE $FILENAME
 
 scp -q -i $IDENTITYFILE $SCRIPTSFOLDER/*.sh $USER@$DVM_HOST:$ROOT_PATH
 
-if [ $FILENAME == "aksEngineScale.sh" ] ; then
+if [ $OPERATION == "scale" ] ; then
     ssh -t -i $IDENTITYFILE $USER@$DVM_HOST "./$FILENAME --tenant-id $TENANT_ID --subscription-id $SUBSCRIPTION_ID --node-count $PARAMETER"
 fi
 
-if [ $FILENAME == "aksEngineUpgrade.sh" ] ; then
+if [ $OPERATION == "upgrade" ] ; then
     ssh -t -i $IDENTITYFILE $USER@$DVM_HOST "./$FILENAME --tenant-id $TENANT_ID --subscription-id $SUBSCRIPTION_ID --upgrade-version $PARAMETER ;"
 fi
 
