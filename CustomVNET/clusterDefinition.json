@@ -1,0 +1,37 @@
+{
+  "apiVersion": "vlabs",
+  "properties": {
+    "orchestratorProfile": {
+      "orchestratorType": "Kubernetes"
+    },
+    "masterProfile": {
+      "count": 1,
+      "dnsPrefix": "",
+      "vmSize": "Standard_D2_v2",
+      "vnetSubnetId": "/subscriptions/SUBSCRIPTION_ID/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Network/virtualNetworks/CustomVNET/subnets/MasterSubnet",
+      "firstConsecutiveStaticIP": "10.100.0.5"
+    },
+    "agentPoolProfiles": [
+      {
+        "name": "agents",
+        "count": 3,
+        "vmSize": "Standard_D2_v2",
+        "vnetSubnetId": "/subscriptions/SUBSCRIPTION_ID/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Network/virtualNetworks/CustomVNET/subnets/AgentSubnet"
+      }
+    ],
+    "linuxProfile": {
+      "adminUsername": "azureuser",
+      "ssh": {
+        "publicKeys": [
+          {
+            "keyData": ""
+          }
+        ]
+      }
+    },
+    "servicePrincipalProfile": {
+      "clientId": "",
+      "secret": ""
+    }
+  }
+}
