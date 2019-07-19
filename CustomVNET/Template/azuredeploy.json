@@ -28,7 +28,7 @@
   "resources": [
     {
       "apiVersion": "2015-06-15",
-      "name": "[parameters('virtualNetworkName')]"
+      "name": "[parameters('virtualNetworkName')]",
       "location": "[resourceGroup().location]",
       "properties": {
         "addressSpace": {
