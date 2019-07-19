@@ -2,13 +2,23 @@
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes"
+      "orchestratorType": "Kubernetes",
+      "orchestratorRelease": "",
+      "kubernetesConfig": {
+          "kubernetesImageBase": "",
+          "useInstanceMetadata": false,
+          "networkPlugin": "flannel"
+       }
+    },
+    "customCloudProfile": {
+            "portalURL": ""
     },
     "masterProfile": {
-      "count": 1,
+      "count": 3,
       "dnsPrefix": "",
+      "osDiskSizeGB": 200,
       "vmSize": "Standard_D2_v2",
-      "vnetSubnetId": "/subscriptions/SUBSCRIPTION_ID/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Network/virtualNetworks/CustomVNET/subnets/MasterSubnet",
+      "vnetSubnetId": "",
       "firstConsecutiveStaticIP": "10.100.0.5"
     },
     "agentPoolProfiles": [
@@ -16,7 +26,10 @@
         "name": "agents",
         "count": 3,
         "vmSize": "Standard_D2_v2",
-        "vnetSubnetId": "/subscriptions/SUBSCRIPTION_ID/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Network/virtualNetworks/CustomVNET/subnets/AgentSubnet"
+        "availabilityProfile": "AvailabilitySet",
+        "AcceleratedNetworkingEnabled": false,
+        "osDiskSizeGB": 200,
+        "vnetSubnetId": ""
       }
     ],
     "linuxProfile": {
