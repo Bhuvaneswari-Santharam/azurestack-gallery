@@ -8,13 +8,8 @@
        "mastersubnetName": {
           "value": ""
         },
-       "masterAddressPrefix":{
-       },
-    
        "agentsubnetName": {
           "value": ""
-        },
-      "agentAddressPrefix":{
-       },
+        }
   }
 }
