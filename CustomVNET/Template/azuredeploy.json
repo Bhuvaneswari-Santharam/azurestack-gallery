@@ -1,31 +1,50 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
-  "parameters": {},
-  "variables": {
-    "virtualNetworkName": "k8s-customVnet",
-    "addressPrefix": "10.240.0.0/16"
-    },
+  "parameters": {
+      "virtualNetworkName": {
+          "type": "string",
+          "defaultValue": "k8s-customVnet",
+          "metadata": {
+             "description": "Custom Vnet name."
+          }
+       },
+       "mastersubnetName": {
+          "type": "string",
+          "defaultValue": "k8s-mastersubnet",
+          "metadata": {
+             "description": "Kubernetes Custom Vnet master subnet name."
+          }
+        },
+        "agentsubnetName": {
+            "type": "string",
+            "defaultValue": "k8s-agentsubnet",
+            "metadata": {
+                "description": "Kubernetes Custom Vnet agent subnet name."
+            }
+        }
+  },
+  "variables": {},
   "resources": [
     {
       "apiVersion": "2015-06-15",
-      "name": "[variables('virtualNetworkName')]",
+      "name": "[parameters('virtualNetworkName')]"
       "location": "[resourceGroup().location]",
       "properties": {
         "addressSpace": {
-          "addressPrefixes": []
+          "addressPrefixes": ["10.100.0.0/24", "10.200.0.0/24"]
         },
         "subnets": [
             {
-                "name": "masterSubnet",
+                "name": "[parameters('mastersubnetName')]",
                 "properties": {
-                "addressPrefix": "[variables('addressPrefix')]"
+                "addressPrefix": "10.100.0.0/24"
                 }
             },
             { 
-                "name": "[variables('agentsubnetName')]",
+                "name": "[parameters('agentsubnetName')]",
                 "properties": {
-                    "addressPrefix": "[variables('addressPrefix')]"
+                    "addressPrefix": "10.200.0.0/24"
                 }
             }
         ]
