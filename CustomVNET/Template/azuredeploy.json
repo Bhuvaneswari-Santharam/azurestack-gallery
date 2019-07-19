@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {},
   "variables": {
-    "virtualNetworkName": "[concat('k8s-', uniqueString(resourceGroup().id))]",
+    "virtualNetworkName": "k8s-customVnet",
     "addressPrefix": "10.240.0.0/16"
     },
   "resources": [
@@ -13,13 +13,11 @@
       "location": "[resourceGroup().location]",
       "properties": {
         "addressSpace": {
-          "addressPrefixes": [
-            "[variables('addressPrefix')]"
-          ]
+          "addressPrefixes": []
         },
         "subnets": [
             {
-                "name": "[variables('mastersubnetName')]",
+                "name": "masterSubnet",
                 "properties": {
                 "addressPrefix": "[variables('addressPrefix')]"
                 }
